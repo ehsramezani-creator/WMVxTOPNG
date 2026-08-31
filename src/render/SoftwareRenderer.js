@@ -30,7 +30,7 @@ export class SoftwareRenderer {
     const projected = positions.map(p => [
       this.width * 0.5 + (p[0] - center[0]) * scale,
       this.height * 0.5 - (p[2] - center[2]) * scale,
-      (p[1] - center[1]) / span,
+      -(p[1] - center[1]) / span,
     ]);
 
     const batches = Array.isArray(model.batches) && model.batches.length
@@ -44,11 +44,10 @@ export class SoftwareRenderer {
       const renderFlags = material?.renderFlags?.flags ?? 0;
       const blendMode = material?.blendMode ?? 0;
 
-      // WMVx ModelRenderPass::ModelRenderPass:
-      // TWO_SIDED means do NOT enable GL_CULL_FACE.
+      // WMVx converts WoW's Y-up coordinates with yUpToZUp(): (x, z, -y).
+      // Its default OpenGL depth test is GL_LESS, so the transformed Z is
+      // the depth value that must be compared here.
       const cull = material?.cull === true || (renderFlags & 0x4) === 0;
-      // WMVx calls this field noZWrite, but its source value is the
-      // ZBUFFERED render flag; that flag causes glDepthMask(GL_FALSE).
       const noZWrite = material?.noZWrite === true || (renderFlags & 0x10) !== 0;
 
       for (let i = first; i + 2 < first + count && i + 2 < model.indices.length; i += 3) {
