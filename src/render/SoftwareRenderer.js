@@ -1,5 +1,9 @@
 export class SoftwareRenderer {
-  constructor({ width = 512, height = 512, background = [24, 24, 24, 255] } = {}) { this.width = width; this.height = height; this.background = background; }
+  constructor({ width = 512, height = 512, background = [24, 24, 24, 255] } = {}) {
+    this.width = width;
+    this.height = height;
+    this.background = background;
+  }
 
   render(model) {
     if (!model?.vertices?.length) throw new Error('Model vertices are required');
@@ -11,11 +15,15 @@ export class SoftwareRenderer {
     for (let i = 0; i < pixels.length; i += 4) pixels.set(this.background, i);
 
     const positions = model.vertices.map(v => v.position);
-    let min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
-    for (const p of positions) for (let k = 0; k < 3; k++) {
-      min[k] = Math.min(min[k], p[k]);
-      max[k] = Math.max(max[k], p[k]);
+    let min = [Infinity, Infinity, Infinity];
+    let max = [-Infinity, -Infinity, -Infinity];
+    for (const p of positions) {
+      for (let k = 0; k < 3; k++) {
+        min[k] = Math.min(min[k], p[k]);
+        max[k] = Math.max(max[k], p[k]);
+      }
     }
+
     const center = min.map((v, k) => (v + max[k]) * 0.5);
     const span = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) || 1;
     const scale = Math.min(this.width, this.height) * 0.78 / span;
@@ -33,15 +41,20 @@ export class SoftwareRenderer {
       const first = batch.firstIndex ?? batch.submesh?.firstIndex ?? 0;
       const count = batch.indexCount ?? batch.submesh?.indexCount ?? model.indices.length - first;
       const material = model.materials?.[batch.index ?? 0] ?? null;
-      const renderFlags = material?.renderFlags?.flags ?? material?.renderFlags?.renderFlags ?? 0;
-      const blendMode = material?.blendMode == null ? 0 : material.blendMode;
-      // WMVx's TWO_SIDED flag (0x4) means culling is disabled. Otherwise
-      // ModelRenderPassRenderer enables GL_CULL_FACE for the pass.
-      const cull = material?.renderFlags?.cull === true || material?.cull === true || (renderFlags & 4) === 0;
-      const noZWrite = material?.noZWrite === true || ((renderFlags & 16) === 0 && blendMode !== 0);
+      const renderFlags = material?.renderFlags?.flags ?? 0;
+      const blendMode = material?.blendMode ?? 0;
+
+      // WMVx ModelRenderPass::ModelRenderPass:
+      // TWO_SIDED means do NOT enable GL_CULL_FACE.
+      const cull = material?.cull === true || (renderFlags & 0x4) === 0;
+      // WMVx calls this field noZWrite, but its source value is the
+      // ZBUFFERED render flag; that flag causes glDepthMask(GL_FALSE).
+      const noZWrite = material?.noZWrite === true || (renderFlags & 0x10) !== 0;
 
       for (let i = first; i + 2 < first + count && i + 2 < model.indices.length; i += 3) {
-        const ia = model.indices[i], ib = model.indices[i + 1], ic = model.indices[i + 2];
+        const ia = model.indices[i];
+        const ib = model.indices[i + 1];
+        const ic = model.indices[i + 2];
         const a0 = projected[ia], b0 = projected[ib], c0 = projected[ic];
         if (!a0 || !b0 || !c0) continue;
 
@@ -55,6 +68,7 @@ export class SoftwareRenderer {
         this.#triangle(pixels, depth, a, b, c, material?.image ?? null, blendMode, noZWrite);
       }
     }
+
     return { width: this.width, height: this.height, pixels };
   }
 
@@ -67,7 +81,9 @@ export class SoftwareRenderer {
 
     for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
       const p = [x + 0.5, y + 0.5, 0];
-      const w0 = edge(b, c, p) / area, w1 = edge(c, a, p) / area, w2 = edge(a, b, p) / area;
+      const w0 = edge(b, c, p) / area;
+      const w1 = edge(c, a, p) / area;
+      const w2 = edge(a, b, p) / area;
       if (w0 < 0 || w1 < 0 || w2 < 0) continue;
 
       const z = w0 * a[2] + w1 * b[2] + w2 * c[2];
@@ -76,14 +92,20 @@ export class SoftwareRenderer {
 
       let r = 210, g = 210, bch = 210, alpha = 255;
       if (image?.pixels?.length && image.width && image.height) {
-        let u = (w0 * a[3] + w1 * b[3] + w2 * c[3]) % 1;
-        let v = (w0 * a[4] + w1 * b[4] + w2 * c[4]) % 1;
-        u = (u + 1) % 1;
-        v = (v + 1) % 1;
+        // WMVx passes the M2 UV directly to OpenGL. Its BLP upload path does
+        // not vertically flip the decoded image, so v=0 samples the first row.
+        let u = w0 * a[3] + w1 * b[3] + w2 * c[3];
+        let v = w0 * a[4] + w1 * b[4] + w2 * c[4];
+        u = ((u % 1) + 1) % 1;
+        v = ((v % 1) + 1) % 1;
+
         const tx = Math.min(image.width - 1, Math.max(0, Math.floor(u * image.width)));
-        const ty = Math.min(image.height - 1, Math.max(0, Math.floor((1 - v) * image.height)));
+        const ty = Math.min(image.height - 1, Math.max(0, Math.floor(v * image.height)));
         const ti = (ty * image.width + tx) * 4;
-        r = image.pixels[ti]; g = image.pixels[ti + 1]; bch = image.pixels[ti + 2]; alpha = image.pixels[ti + 3];
+        r = image.pixels[ti];
+        g = image.pixels[ti + 1];
+        bch = image.pixels[ti + 2];
+        alpha = image.pixels[ti + 3];
       }
 
       const o = index * 4;
@@ -120,7 +142,10 @@ export class SoftwareRenderer {
         pixels[o + 2] = Math.min(255, Math.round(bch + db * (1 - sa)));
         pixels[o + 3] = 255;
       } else {
-        pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = bch; pixels[o + 3] = alpha;
+        pixels[o] = r;
+        pixels[o + 1] = g;
+        pixels[o + 2] = bch;
+        pixels[o + 3] = alpha;
       }
 
       if (!noZWrite) depth[index] = z;
@@ -128,5 +153,8 @@ export class SoftwareRenderer {
   }
 }
 
-function edge(a, b, p) { return (p[0] - a[0]) * (b[1] - a[1]) - (p[1] - a[1]) * (b[0] - a[0]); }
+function edge(a, b, p) {
+  return (p[0] - a[0]) * (b[1] - a[1]) - (p[1] - a[1]) * (b[0] - a[0]);
+}
+
 export default SoftwareRenderer;
