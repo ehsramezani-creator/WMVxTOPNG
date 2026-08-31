@@ -42,9 +42,21 @@ export class CharacterTextureResolver {
     const hairColor = options.hairColor ?? 0;
     const hairStyle = options.hairStyle ?? 0;
     const facialColor = options.facialColor ?? 0;
-    const pick = (baseSection, variationIndex, colorIndex = 0) => findRecord(dbc, { raceId: identity.raceId, sexId: identity.sexId, baseSection, variationIndex, colorIndex });
 
-    // Same lookup semantics as WMVx LegacyCharacterCustomizationProvider.
+    // IMPORTANT: WotLK CharSections semantics are not the intuitive names of
+    // the DBC columns. WMVx's GenericLegacyDBCCharSectionsRecordAdaptor maps:
+    //   getSection()        <- DBC variationIndex
+    //   getVariationIndex() <- DBC colorIndex
+    // Therefore the lookup below intentionally swaps the two query fields.
+    const pick = (baseSection, variationIndex, colorIndex = 0) => findRecord(dbc, {
+      raceId: identity.raceId,
+      sexId: identity.sexId,
+      baseSection,
+      variationIndex: colorIndex,
+      colorIndex: variationIndex,
+    });
+
+    // Exact legacy lookup semantics used by WMVx LegacyCharacterCustomizationProvider.
     const records = {
       skin: pick(BASE.SKIN, skin),
       face: pick(BASE.FACE, skin, face),
@@ -79,7 +91,9 @@ export class CharacterTextureResolver {
     const base = await load(baseName);
     if (!base) return { enabled: true, identity, records, textureNames, composite: null, missingBase: baseName, missing };
 
-    // WMVx builds one component texture and binds it to M2 texture type BODY (1).
+    // WMVx builds one 512x512 legacy component texture and binds it to M2
+    // texture type BODY (1). Layer ordering is the same as its provider:
+    // underwear/face at layer 1, facial hair at 2, scalp/hair at 3.
     const builder = new CharacterTextureBuilder({ regions: LEGACY_CHARACTER_REGIONS });
     builder.setBaseLayer(base);
     const layers = [];
