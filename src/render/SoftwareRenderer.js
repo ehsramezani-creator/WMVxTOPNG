@@ -44,9 +44,7 @@ export class SoftwareRenderer {
       const renderFlags = material?.renderFlags?.flags ?? 0;
       const blendMode = material?.blendMode ?? 0;
 
-      // WMVx converts WoW's Y-up coordinates with yUpToZUp(): (x, z, -y).
-      // Its default OpenGL depth test is GL_LESS, so the transformed Z is
-      // the depth value that must be compared here.
+      // WMVx TextureType/RenderFlags: TWO_SIDED disables back-face culling.
       const cull = material?.cull === true || (renderFlags & 0x4) === 0;
       const noZWrite = material?.noZWrite === true || (renderFlags & 0x10) !== 0;
 
@@ -59,7 +57,9 @@ export class SoftwareRenderer {
 
         const area = edge(a0, b0, c0);
         if (Math.abs(area) < 1e-8) continue;
-        if (cull && area <= 0) continue;
+        // edge(a,b,c) is the negative of the conventional 2D cross product.
+        // Therefore WMVx/OpenGL front-facing CCW triangles have area < 0 here.
+        if (cull && area >= 0) continue;
 
         const a = [a0[0], a0[1], a0[2], model.vertices[ia]?.texCoord?.[0] ?? 0, model.vertices[ia]?.texCoord?.[1] ?? 0];
         const b = [b0[0], b0[1], b0[2], model.vertices[ib]?.texCoord?.[0] ?? 0, model.vertices[ib]?.texCoord?.[1] ?? 0];
@@ -91,8 +91,6 @@ export class SoftwareRenderer {
 
       let r = 210, g = 210, bch = 210, alpha = 255;
       if (image?.pixels?.length && image.width && image.height) {
-        // WMVx passes the M2 UV directly to OpenGL. Its BLP upload path does
-        // not vertically flip the decoded image, so v=0 samples the first row.
         let u = w0 * a[3] + w1 * b[3] + w2 * c[3];
         let v = w0 * a[4] + w1 * b[4] + w2 * c[4];
         u = ((u % 1) + 1) % 1;
