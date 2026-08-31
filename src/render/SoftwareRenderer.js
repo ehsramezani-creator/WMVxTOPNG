@@ -1,16 +1,13 @@
 export class SoftwareRenderer {
   constructor({ width = 512, height = 512, background = [24, 24, 24, 255] } = {}) {
-    this.width = width;
-    this.height = height;
-    this.background = background;
+    this.width = width; this.height = height; this.background = background;
   }
 
   render(model) {
     if (!model?.vertices?.length) throw new Error('Model vertices are required');
     if (!model?.indices?.length) throw new Error('Model indices are required');
     const pixels = new Uint8Array(this.width * this.height * 4);
-    const depth = new Float64Array(this.width * this.height);
-    depth.fill(Infinity);
+    const depth = new Float64Array(this.width * this.height); depth.fill(Infinity);
     for (let i = 0; i < pixels.length; i += 4) pixels.set(this.background, i);
 
     const positions = model.vertices.map(v => v.position);
@@ -19,25 +16,33 @@ export class SoftwareRenderer {
     const center = min.map((v, k) => (v + max[k]) * 0.5);
     const span = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) || 1;
     const scale = Math.min(this.width, this.height) * 0.78 / span;
-
     const projected = positions.map(p => [
       this.width * 0.5 + (p[0] - center[0]) * scale,
       this.height * 0.5 - (p[2] - center[2]) * scale,
       (p[1] - center[1]) / span
     ]);
 
-    for (let i = 0; i + 2 < model.indices.length; i += 3) {
-      const a = projected[model.indices[i]], b = projected[model.indices[i + 1]], c = projected[model.indices[i + 2]];
-      if (!a || !b || !c) continue;
-      const area = edge(a, b, c);
-      if (Math.abs(area) < 1e-8) continue;
-      const shade = 0.45 + 0.55 * Math.min(1, Math.abs(area) / (span * span * scale * scale));
-      this.#triangle(pixels, depth, a, b, c, shade);
+    const batches = Array.isArray(model.batches) && model.batches.length ? model.batches : [{ index: 0, firstIndex: 0, indexCount: model.indices.length }];
+    for (const batch of batches) {
+      const first = batch.firstIndex ?? batch.submesh?.firstIndex ?? 0;
+      const count = batch.indexCount ?? batch.submesh?.indexCount ?? (model.indices.length - first);
+      const material = model.materials?.[batch.materialIndex ?? batch.index ?? 0] ?? null;
+      for (let i = first; i + 2 < first + count && i + 2 < model.indices.length; i += 3) {
+        const ia = model.indices[i], ib = model.indices[i + 1], ic = model.indices[i + 2];
+        const a0 = projected[ia], b0 = projected[ib], c0 = projected[ic];
+        if (!a0 || !b0 || !c0) continue;
+        const a = [a0[0], a0[1], a0[2], model.vertices[ia]?.texCoord?.[0] ?? 0, model.vertices[ia]?.texCoord?.[1] ?? 0];
+        const b = [b0[0], b0[1], b0[2], model.vertices[ib]?.texCoord?.[0] ?? 0, model.vertices[ib]?.texCoord?.[1] ?? 0];
+        const c = [c0[0], c0[1], c0[2], model.vertices[ic]?.texCoord?.[0] ?? 0, model.vertices[ic]?.texCoord?.[1] ?? 0];
+        const area = edge(a, b, c); if (Math.abs(area) < 1e-8) continue;
+        const shade = 0.72;
+        this.#triangle(pixels, depth, a, b, c, shade, material?.image ?? null);
+      }
     }
     return { width: this.width, height: this.height, pixels };
   }
 
-  #triangle(pixels, depth, a, b, c, shade) {
+  #triangle(pixels, depth, a, b, c, shade, image) {
     const minX = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0])));
     const maxX = Math.min(this.width - 1, Math.ceil(Math.max(a[0], b[0], c[0])));
     const minY = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1])));
@@ -48,16 +53,21 @@ export class SoftwareRenderer {
       const w0 = edge(b, c, p) / area, w1 = edge(c, a, p) / area, w2 = edge(a, b, p) / area;
       if (w0 < 0 || w1 < 0 || w2 < 0) continue;
       const z = w0 * a[2] + w1 * b[2] + w2 * c[2];
-      const index = y * this.width + x;
-      if (z >= depth[index]) continue;
-      depth[index] = z;
-      const v = Math.max(0, Math.min(255, Math.round(210 * shade)));
-      const o = index * 4;
-      pixels[o] = v; pixels[o + 1] = v; pixels[o + 2] = v; pixels[o + 3] = 255;
+      const index = y * this.width + x; if (z >= depth[index]) continue; depth[index] = z;
+      let r = 210, g = 210, bch = 210, alpha = 255;
+      if (image?.pixels?.length && image.width && image.height) {
+        let u = w0 * a[3] + w1 * b[3] + w2 * c[3];
+        let v = w0 * a[4] + w1 * b[4] + w2 * c[4];
+        u = ((u % 1) + 1) % 1; v = ((v % 1) + 1) % 1;
+        const tx = Math.min(image.width - 1, Math.max(0, Math.floor(u * image.width)));
+        const ty = Math.min(image.height - 1, Math.max(0, Math.floor((1 - v) * image.height)));
+        const ti = (ty * image.width + tx) * 4;
+        r = image.pixels[ti]; g = image.pixels[ti + 1]; bch = image.pixels[ti + 2]; alpha = image.pixels[ti + 3];
+      }
+      const o = index * 4; pixels[o] = Math.min(255, Math.round(r * shade)); pixels[o + 1] = Math.min(255, Math.round(g * shade)); pixels[o + 2] = Math.min(255, Math.round(bch * shade)); pixels[o + 3] = alpha;
     }
   }
 }
 
 function edge(a, b, p) { return (p[0] - a[0]) * (b[1] - a[1]) - (p[1] - a[1]) * (b[0] - a[0]); }
-
 export default SoftwareRenderer;
