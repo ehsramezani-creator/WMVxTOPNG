@@ -41,7 +41,7 @@ function safeRelativePath(value) {
 }
 
 function isAssetForModelTree(p) {
-  return /\.(m2|skin|blp)$/i.test(p);
+  return /\.(m2|skin|blp)$/i.test(p) || /(^|\\)DBFilesClient\\CharSections\.dbc$/i.test(p);
 }
 
 async function readArchiveList(executable, archive, tempFile) {
