@@ -8,6 +8,7 @@
     "inspect": "node src/tools/inspect-m2.js",
     "extract-mpq": "node src/tools/extract-mpq.js",
     "build-models-tree": "node src/tools/build-models-tree.js",
-    "materialize-models-tree": "node src/tools/materialize-models-tree.js"
+    "materialize-models-tree": "node src/tools/materialize-models-tree.js",
+    "render-model": "node src/tools/render-model.js"
   }
 }
