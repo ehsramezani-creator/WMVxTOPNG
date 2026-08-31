@@ -9,7 +9,7 @@ import { SoftwareRenderer } from '../render/SoftwareRenderer.js';
 import { encodeRGBA } from '../render/PNGEncoder.js';
 
 function usage() { console.error('Usage: node src/tools/render-model.js <M2> [output.png] [modelsRoot] [dbRoot]'); process.exit(2); }
-function normalize(p) { return p.replaceAll('\\', '/').replace(/^\/+/, '').toLowerCase(); }
+function normalize(p) { return String(p ?? '').replaceAll('\\', '/').replace(/^\/+/, '').toLowerCase(); }
 async function collectFiles(root) {
   const out = new Map();
   async function walk(dir) { for (const entry of await fs.readdir(dir, { withFileTypes: true })) { const full = path.join(dir, entry.name); if (entry.isDirectory()) await walk(full); else out.set(normalize(path.relative(root, full)), full); } }
@@ -43,17 +43,28 @@ async function decodeTexture(name) {
   const image = decoder.decode(await fs.readFile(texturePath)); imageCache.set(key, image); return image;
 }
 
-const materialImages = [], textureStats = { referenced: 0, found: 0, decoded: 0, characterResolved: false, missing: [] };
+const materialImages = [];
+const textureStats = { referenced: 0, found: 0, decoded: 0, characterResolved: false, bodyBatches: 0, hairBatches: 0, facialHairBatches: 0, missing: [] };
 for (const material of resolvedMaterials.materials) {
   const texture = material.texture;
   let image = null;
   if (texture?.name) {
-    textureStats.referenced++; image = await decodeTexture(texture.name);
-    if (image) { textureStats.found++; textureStats.decoded++; } else textureStats.missing.push(texture.name);
+    textureStats.referenced++;
+    image = await decodeTexture(texture.name);
+    if (image) { textureStats.found++; textureStats.decoded++; }
+    else textureStats.missing.push(texture.name);
   }
-  if (characterTexture.enabled && texture?.type === 1 && characterTexture.composite) { image = characterTexture.composite; textureStats.characterResolved = true; }
-  else if (characterTexture.enabled && texture?.type === 6 && characterTexture.direct?.hair?.length) image = await decodeTexture(characterTexture.direct.hair[0]) ?? image;
-  else if (characterTexture.enabled && texture?.type === 7 && characterTexture.direct?.facialHair?.length) image = await decodeTexture(characterTexture.direct.facialHair[0]) ?? image;
+  if (characterTexture.enabled && texture?.type === 1 && characterTexture.composite) {
+    image = characterTexture.composite;
+    textureStats.characterResolved = true;
+    textureStats.bodyBatches++;
+  } else if (characterTexture.enabled && texture?.type === 6 && characterTexture.direct?.hair?.length) {
+    image = await decodeTexture(characterTexture.direct.hair[0]) ?? image;
+    textureStats.hairBatches++;
+  } else if (characterTexture.enabled && texture?.type === 7 && characterTexture.direct?.facialHair?.length) {
+    image = await decodeTexture(characterTexture.direct.facialHair[0]) ?? image;
+    textureStats.facialHairBatches++;
+  }
   materialImages[material.index] = image;
 }
 model.materials = resolvedMaterials.materials.map((material, i) => ({ ...material, image: materialImages[i] ?? null }));
@@ -61,4 +72,20 @@ model.batches = resolvedMaterials.batches;
 const image = new SoftwareRenderer({ width: 512, height: 512 }).render(model);
 await fs.mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
 await fs.writeFile(path.resolve(outputPath), encodeRGBA(image.width, image.height, image.pixels));
-console.log(JSON.stringify({ model: m2.name, version: m2.version, vertices: model.vertices.length, triangles: model.indices.length / 3, skin: path.basename(m2.skin.filePath ?? ''), textures: m2.textures.length, dbPath, characterTexture: characterTexture.enabled ? { identity: characterTexture.identity, layers: characterTexture.layers?.length ?? 0, missingBase: characterTexture.missingBase ?? null } : characterTexture, textureStats, output: path.resolve(outputPath) }, null, 2));
+console.log(JSON.stringify({
+  model: m2.name,
+  version: m2.version,
+  vertices: model.vertices.length,
+  triangles: model.indices.length / 3,
+  skin: path.basename(m2.skin.filePath ?? ''),
+  textures: m2.textures.length,
+  dbPath,
+  characterTexture: characterTexture.enabled ? {
+    identity: characterTexture.identity,
+    layers: characterTexture.layers?.length ?? 0,
+    missingBase: characterTexture.missingBase ?? null,
+    missing: characterTexture.missing ?? [],
+  } : characterTexture,
+  textureStats,
+  output: path.resolve(outputPath)
+}, null, 2));
