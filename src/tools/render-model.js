@@ -75,7 +75,19 @@ for (const material of resolvedMaterials.materials) {
   materialImages[material.index] = image;
 }
 model.materials = resolvedMaterials.materials.map((material, i) => ({ ...material, image: materialImages[i] ?? null }));
-model.batches = resolvedMaterials.batches;
+
+// Keep the geometry range/submesh information produced by ModelAssembler.
+// MaterialResolver only resolves material fields; replacing model.batches with
+// its output discards firstIndex/indexCount and makes every material draw the
+// entire model. WMVx renders each SKIN batch only over its submesh triangle range.
+model.batches = model.batches.map((batch, i) => ({
+  ...batch,
+  ...(resolvedMaterials.batches[i] ?? {}),
+  firstIndex: batch.firstIndex,
+  indexCount: batch.indexCount,
+  submesh: batch.submesh,
+}));
+
 const image = new SoftwareRenderer({ width: 512, height: 512 }).render(model);
 await fs.mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
 await fs.writeFile(path.resolve(outputPath), encodeRGBA(image.width, image.height, image.pixels));
