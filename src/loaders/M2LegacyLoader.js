@@ -6,12 +6,25 @@ const MD20 = 'MD20';
 const WOTLK_N_VERTICES_OFFSET = 0x3c;
 const WOTLK_OFS_VERTICES_OFFSET = 0x40;
 const WOTLK_N_VIEWS_OFFSET = 0x44;
+const WOTLK_N_TEXTURES_OFFSET = 0x54;
+const WOTLK_OFS_TEXTURES_OFFSET = 0x58;
+const WOTLK_N_RENDER_FLAGS_OFFSET = 0x70;
+const WOTLK_OFS_RENDER_FLAGS_OFFSET = 0x74;
+const WOTLK_N_TEXTURE_LOOKUPS_OFFSET = 0x80;
+const WOTLK_OFS_TEXTURE_LOOKUPS_OFFSET = 0x84;
 const M2_VERTEX_SIZE = 48;
+const M2_TEXTURE_SIZE = 16;
+const M2_RENDER_FLAG_SIZE = 4;
 
 function range(buffer, offset, size, label) {
   if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(size) || offset < 0 || size < 0 || offset + size > buffer.length) {
     throw new RangeError(`${label} exceeds M2 file: offset=0x${offset.toString(16)}, size=${size}, file=${buffer.length}`);
   }
+}
+
+function readString(buffer, offset, length) {
+  if (!length || offset < 0 || offset + length > buffer.length) return '';
+  return buffer.toString('utf8', offset, offset + length).replace(/\0+$/, '');
 }
 
 export class M2LegacyLoader {
@@ -30,7 +43,7 @@ export class M2LegacyLoader {
 
   parse(buffer, source = '<buffer>') {
     if (!Buffer.isBuffer(buffer)) buffer = Buffer.from(buffer);
-    if (buffer.length < 0x48) throw new Error(`M2 too small: ${source}`);
+    if (buffer.length < 0x88) throw new Error(`M2 too small: ${source}`);
     if (buffer.toString('ascii', 0, 4) !== MD20) throw new Error(`Invalid M2 magic: ${source}`);
 
     const version = buffer.readUInt32LE(4);
@@ -41,11 +54,14 @@ export class M2LegacyLoader {
     const nVertices = buffer.readUInt32LE(WOTLK_N_VERTICES_OFFSET);
     const ofsVertices = buffer.readUInt32LE(WOTLK_OFS_VERTICES_OFFSET);
     const nViews = buffer.readUInt32LE(WOTLK_N_VIEWS_OFFSET);
+    const nTextures = buffer.readUInt32LE(WOTLK_N_TEXTURES_OFFSET);
+    const ofsTextures = buffer.readUInt32LE(WOTLK_OFS_TEXTURES_OFFSET);
+    const nRenderFlags = buffer.readUInt32LE(WOTLK_N_RENDER_FLAGS_OFFSET);
+    const ofsRenderFlags = buffer.readUInt32LE(WOTLK_OFS_RENDER_FLAGS_OFFSET);
+    const nTextureLookups = buffer.readUInt32LE(WOTLK_N_TEXTURE_LOOKUPS_OFFSET);
+    const ofsTextureLookups = buffer.readUInt32LE(WOTLK_OFS_TEXTURE_LOOKUPS_OFFSET);
 
-    let name = '';
-    if (nameLength && nameOffset + nameLength <= buffer.length) {
-      name = buffer.toString('utf8', nameOffset, nameOffset + nameLength).replace(/\0+$/, '');
-    }
+    const name = readString(buffer, nameOffset, nameLength);
 
     range(buffer, ofsVertices, nVertices * M2_VERTEX_SIZE, 'M2 vertices');
     const vertices = new Array(nVertices);
@@ -61,19 +77,37 @@ export class M2LegacyLoader {
       };
     }
 
+    range(buffer, ofsTextures, nTextures * M2_TEXTURE_SIZE, 'M2 textures');
+    const textures = new Array(nTextures);
+    for (let i = 0; i < nTextures; i++) {
+      const o = ofsTextures + i * M2_TEXTURE_SIZE;
+      const flags = buffer.readUInt32LE(o);
+      const type = buffer.readUInt32LE(o + 4);
+      const length = buffer.readUInt32LE(o + 8);
+      const offset = buffer.readUInt32LE(o + 12);
+      range(buffer, offset, length, `M2 texture ${i} name`);
+      textures[i] = { index: i, flags, type, name: readString(buffer, offset, length) };
+    }
+
+    range(buffer, ofsRenderFlags, nRenderFlags * M2_RENDER_FLAG_SIZE, 'M2 render flags');
+    const renderFlags = new Array(nRenderFlags);
+    for (let i = 0; i < nRenderFlags; i++) {
+      const o = ofsRenderFlags + i * M2_RENDER_FLAG_SIZE;
+      renderFlags[i] = { index: i, flags: buffer.readUInt16LE(o), blendingMode: buffer.readUInt16LE(o + 2) };
+    }
+
+    range(buffer, ofsTextureLookups, nTextureLookups * 2, 'M2 texture lookups');
+    const textureLookups = new Uint16Array(nTextureLookups);
+    for (let i = 0; i < nTextureLookups; i++) textureLookups[i] = buffer.readUInt16LE(ofsTextureLookups + i * 2);
+
     return {
-      source,
-      magic: MD20,
-      version,
-      name,
-      nVertices,
-      ofsVertices,
-      vertices,
-      nViews,
-      skinProfileCount: nViews,
-      skinNames: [],
-      skins: [],
-      skin: null,
+      source, magic: MD20, version, name,
+      nVertices, ofsVertices, vertices,
+      nViews, skinProfileCount: nViews,
+      nTextures, ofsTextures, textures,
+      nRenderFlags, ofsRenderFlags, renderFlags,
+      nTextureLookups, ofsTextureLookups, textureLookups,
+      skinNames: [], skins: [], skin: null,
     };
   }
 
