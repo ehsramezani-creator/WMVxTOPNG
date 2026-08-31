@@ -22,12 +22,14 @@ export class SoftwareRenderer {
         const b = [b0[0], b0[1], b0[2], model.vertices[ib]?.texCoord?.[0] ?? 0, model.vertices[ib]?.texCoord?.[1] ?? 0];
         const c = [c0[0], c0[1], c0[2], model.vertices[ic]?.texCoord?.[0] ?? 0, model.vertices[ic]?.texCoord?.[1] ?? 0];
         if (Math.abs(edge(a, b, c)) < 1e-8) continue;
-        this.#triangle(pixels, depth, a, b, c, 0.72, material?.image ?? null);
+        // WMVx binds textures with glColor4f(1,1,1,1) for the normal pass.
+        // Do not apply the previous arbitrary 0.72 tint here.
+        this.#triangle(pixels, depth, a, b, c, material?.image ?? null);
       }
     }
     return { width: this.width, height: this.height, pixels };
   }
-  #triangle(pixels, depth, a, b, c, shade, image) {
+  #triangle(pixels, depth, a, b, c, image) {
     const minX = Math.max(0, Math.floor(Math.min(a[0], b[0], c[0]))), maxX = Math.min(this.width - 1, Math.ceil(Math.max(a[0], b[0], c[0])));
     const minY = Math.max(0, Math.floor(Math.min(a[1], b[1], c[1]))), maxY = Math.min(this.height - 1, Math.ceil(Math.max(a[1], b[1], c[1]))), area = edge(a, b, c);
     for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
@@ -42,7 +44,7 @@ export class SoftwareRenderer {
         const tx = Math.min(image.width - 1, Math.max(0, Math.floor(u * image.width))), ty = Math.min(image.height - 1, Math.max(0, Math.floor((1 - v) * image.height))), ti = (ty * image.width + tx) * 4;
         r = image.pixels[ti]; g = image.pixels[ti + 1]; bch = image.pixels[ti + 2]; alpha = image.pixels[ti + 3];
       }
-      const o = index * 4; pixels[o] = Math.min(255, Math.round(r * shade)); pixels[o + 1] = Math.min(255, Math.round(g * shade)); pixels[o + 2] = Math.min(255, Math.round(bch * shade)); pixels[o + 3] = alpha;
+      const o = index * 4; pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = bch; pixels[o + 3] = alpha;
     }
   }
 }
