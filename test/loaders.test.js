@@ -4,15 +4,22 @@ import { M2LegacyLoader, SkinLegacyLoader, ModelAssembler } from '../src/index.j
 
 function makeM2() {
   const vertexOffset = 0x80;
+  const nameOffset = 0x78;
   const b = Buffer.alloc(vertexOffset + 3 * 48);
   b.write('MD20', 0, 'ascii');
   b.writeUInt32LE(264, 4);
   b.writeUInt32LE(8, 8);
-  b.writeUInt32LE(0x70, 12);
+  b.writeUInt32LE(nameOffset, 12);
   b.writeUInt32LE(3, 0x3c);
   b.writeUInt32LE(vertexOffset, 0x40);
   b.writeUInt32LE(2, 0x44);
-  b.write('TestM2', 0x70, 'ascii');
+  b.writeUInt32LE(0, 0x54); // nTextures
+  b.writeUInt32LE(0, 0x58); // ofsTextures
+  b.writeUInt32LE(0, 0x70); // nRenderFlags
+  b.writeUInt32LE(0, 0x74); // ofsRenderFlags
+  b.writeUInt32LE(0, 0x80); // nTextureLookups (fixture has no texture table)
+  b.writeUInt32LE(0, 0x84); // ofsTextureLookups
+  b.write('TestM2', nameOffset, 'ascii');
   for (let i = 0; i < 3; i++) {
     const o = vertexOffset + i * 48;
     b.writeFloatLE(i, o);
