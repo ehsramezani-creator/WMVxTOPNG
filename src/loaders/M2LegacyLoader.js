@@ -3,11 +3,16 @@ import { SkinLegacyLoader } from './SkinLegacyLoader.js';
 import { M2SkinResolver } from './M2SkinResolver.js';
 
 const MD20 = 'MD20';
+
+// WotLK 3.3.5a (M2 version 264) legacy header offsets.
+// These follow the header layout used by WMVx/M2Definitions.h:
+// vertices at 0x3c, views at 0x44, textures at 0x50,
+// render flags at 0x70, texture lookup at 0x80.
 const WOTLK_N_VERTICES_OFFSET = 0x3c;
 const WOTLK_OFS_VERTICES_OFFSET = 0x40;
 const WOTLK_N_VIEWS_OFFSET = 0x44;
-const WOTLK_N_TEXTURES_OFFSET = 0x54;
-const WOTLK_OFS_TEXTURES_OFFSET = 0x58;
+const WOTLK_N_TEXTURES_OFFSET = 0x50;
+const WOTLK_OFS_TEXTURES_OFFSET = 0x54;
 const WOTLK_N_RENDER_FLAGS_OFFSET = 0x70;
 const WOTLK_OFS_RENDER_FLAGS_OFFSET = 0x74;
 const WOTLK_N_TEXTURE_LOOKUPS_OFFSET = 0x80;
@@ -81,12 +86,13 @@ export class M2LegacyLoader {
     const textures = new Array(nTextures);
     for (let i = 0; i < nTextures; i++) {
       const o = ofsTextures + i * M2_TEXTURE_SIZE;
-      const flags = buffer.readUInt32LE(o);
-      const type = buffer.readUInt32LE(o + 4);
+      // WMVx ModelTextureM2 is: type, flags, name(M2Array).
+      const type = buffer.readUInt32LE(o);
+      const flags = buffer.readUInt32LE(o + 4);
       const length = buffer.readUInt32LE(o + 8);
       const offset = buffer.readUInt32LE(o + 12);
       range(buffer, offset, length, `M2 texture ${i} name`);
-      textures[i] = { index: i, flags, type, name: readString(buffer, offset, length) };
+      textures[i] = { index: i, type, flags, name: readString(buffer, offset, length) };
     }
 
     range(buffer, ofsRenderFlags, nRenderFlags * M2_RENDER_FLAG_SIZE, 'M2 render flags');
