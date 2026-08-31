@@ -35,8 +35,10 @@ export class SoftwareRenderer {
       const material = model.materials?.[batch.index ?? 0] ?? null;
       const renderFlags = material?.renderFlags?.flags ?? material?.renderFlags?.renderFlags ?? 0;
       const blendMode = material?.blendMode == null ? 0 : material.blendMode;
-      const cull = material?.renderFlags?.cull === true || material?.cull === true || (renderFlags & 4) !== 0;
-      const noZWrite = material?.noZWrite === true || (renderFlags & 16) === 0 && blendMode !== 0;
+      // WMVx's TWO_SIDED flag (0x4) means culling is disabled. Otherwise
+      // ModelRenderPassRenderer enables GL_CULL_FACE for the pass.
+      const cull = material?.renderFlags?.cull === true || material?.cull === true || (renderFlags & 4) === 0;
+      const noZWrite = material?.noZWrite === true || ((renderFlags & 16) === 0 && blendMode !== 0);
 
       for (let i = first; i + 2 < first + count && i + 2 < model.indices.length; i += 3) {
         const ia = model.indices[i], ib = model.indices[i + 1], ic = model.indices[i + 2];
@@ -84,38 +86,35 @@ export class SoftwareRenderer {
         r = image.pixels[ti]; g = image.pixels[ti + 1]; bch = image.pixels[ti + 2]; alpha = image.pixels[ti + 3];
       }
 
-      // WMVx ModelRenderPassRenderer.cpp uses GL_COLOR + the M2 blend mode.
-      // Keep the source texture un-tinted and reproduce those fixed-function
-      // blend equations in the software path.
       const o = index * 4;
       const dr = pixels[o], dg = pixels[o + 1], db = pixels[o + 2], da = pixels[o + 3];
       const sa = alpha / 255;
       const daN = da / 255;
 
-      if (blendMode === 1) { // BM_TRANSPARENT: GL_ALPHA_TEST, GL_GEQUAL 0.7
+      if (blendMode === 1) {
         if (sa < 0.7) continue;
         pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = bch; pixels[o + 3] = 255;
-      } else if (blendMode === 2) { // BM_ALPHA_BLEND
+      } else if (blendMode === 2) {
         pixels[o] = Math.round(r * sa + dr * (1 - sa));
         pixels[o + 1] = Math.round(g * sa + dg * (1 - sa));
         pixels[o + 2] = Math.round(bch * sa + db * (1 - sa));
         pixels[o + 3] = Math.round((sa + daN * (1 - sa)) * 255);
-      } else if (blendMode === 3) { // BM_ADDITIVE: GL_SRC_COLOR, GL_ONE
+      } else if (blendMode === 3) {
         pixels[o] = Math.min(255, Math.round(r * (r / 255) + dr));
         pixels[o + 1] = Math.min(255, Math.round(g * (g / 255) + dg));
         pixels[o + 2] = Math.min(255, Math.round(bch * (bch / 255) + db));
         pixels[o + 3] = 255;
-      } else if (blendMode === 4) { // BM_ADDITIVE_ALPHA: GL_SRC_ALPHA, GL_ONE
+      } else if (blendMode === 4) {
         pixels[o] = Math.min(255, Math.round(r * sa + dr));
         pixels[o + 1] = Math.min(255, Math.round(g * sa + dg));
         pixels[o + 2] = Math.min(255, Math.round(bch * sa + db));
         pixels[o + 3] = 255;
-      } else if (blendMode === 5 || blendMode === 6) { // WMVx uses same GL blend func for both
+      } else if (blendMode === 5 || blendMode === 6) {
         pixels[o] = Math.min(255, Math.round(2 * dr * r / 255));
         pixels[o + 1] = Math.min(255, Math.round(2 * dg * g / 255));
         pixels[o + 2] = Math.min(255, Math.round(2 * db * bch / 255));
         pixels[o + 3] = 255;
-      } else if (blendMode === 7) { // BM_BLEND_ADD: GL_ONE, GL_ONE_MINUS_SRC_ALPHA
+      } else if (blendMode === 7) {
         pixels[o] = Math.min(255, Math.round(r + dr * (1 - sa)));
         pixels[o + 1] = Math.min(255, Math.round(g + dg * (1 - sa)));
         pixels[o + 2] = Math.min(255, Math.round(bch + db * (1 - sa)));
