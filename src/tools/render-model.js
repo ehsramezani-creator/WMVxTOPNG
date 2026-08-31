@@ -17,7 +17,14 @@ async function collectFiles(root) {
 }
 async function findDb(root) {
   if (!root) return null;
-  for (const candidate of [path.join(root, 'DBFilesClient', 'CharSections.dbc'), path.join(root, 'dbfilesclient', 'CharSections.dbc'), path.join(root, 'CharSections.dbc')]) {
+  const names = [
+    ['DBFilesClient', 'CharSections.dbc'],
+    ['dbfilesclient', 'CharSections.dbc'],
+    ['dbc', 'CharSections.dbc'],
+    ['CharSections.dbc'],
+  ];
+  for (const parts of names) {
+    const candidate = path.join(root, ...parts);
     try { await fs.access(candidate); return candidate; } catch {}
   }
   return null;
