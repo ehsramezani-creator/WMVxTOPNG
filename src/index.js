@@ -3,3 +3,4 @@ export { SkinLegacyLoader } from './loaders/SkinLegacyLoader.js';
 export { M2SkinResolver } from './loaders/M2SkinResolver.js';
 export { ModelAssembler } from './loaders/ModelAssembler.js';
 export { MaterialResolver } from './loaders/MaterialResolver.js';
+export { BLPDecoder } from './loaders/BLPDecoder.js';
