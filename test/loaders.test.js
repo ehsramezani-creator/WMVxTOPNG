@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { M2LegacyLoader, SkinLegacyLoader, ModelAssembler } from '../src/index.js';
 
 function makeM2() {
-  const vertexOffset = 0x80;
+  const vertexOffset = 0x100;
   const nameOffset = 0x78;
   const b = Buffer.alloc(vertexOffset + 3 * 48);
   b.write('MD20', 0, 'ascii');
@@ -17,7 +17,7 @@ function makeM2() {
   b.writeUInt32LE(0, 0x58); // ofsTextures
   b.writeUInt32LE(0, 0x70); // nRenderFlags
   b.writeUInt32LE(0, 0x74); // ofsRenderFlags
-  b.writeUInt32LE(0, 0x80); // nTextureLookups (fixture has no texture table)
+  b.writeUInt32LE(0, 0x80); // nTextureLookups
   b.writeUInt32LE(0, 0x84); // ofsTextureLookups
   b.write('TestM2', nameOffset, 'ascii');
   for (let i = 0; i < 3; i++) {
