@@ -1,8 +1,14 @@
 export class SoftwareRenderer {
-  constructor({ width = 512, height = 512, background = [0, 0, 0, 0] } = {}) {
+  constructor({
+    width = 512,
+    height = 512,
+    background = [0, 0, 0, 0],
+    cameraYaw = 0,
+  } = {}) {
     this.width = width;
     this.height = height;
     this.background = background;
+    this.cameraYaw = cameraYaw;
   }
 
   render(model) {
@@ -22,11 +28,31 @@ export class SoftwareRenderer {
     const center = min.map((v, k) => (v + max[k]) * 0.5);
     const span = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) || 1;
     const scale = Math.min(this.width, this.height) * 0.78 / span;
-    const projected = positions.map(p => [
-      this.width * 0.5 + (p[0] - center[0]) * scale,
-      this.height * 0.5 - (p[2] - center[2]) * scale,
-      -(p[1] - center[1]) / span,
-    ]);
+
+    const yaw = (this.cameraYaw * Math.PI) / 180;
+    const cosYaw = Math.cos(yaw);
+    const sinYaw = Math.sin(yaw);
+
+    /*
+     * Orbit the camera around the model's vertical Y axis.
+     *
+     * The model is centered before rotation, so changing cameraYaw does not
+     * move the model through the frame. Positive angles rotate the view around
+     * the Y axis and keep the existing front view at 0 degrees.
+     */
+    const projected = positions.map(p => {
+      const x = p[0] - center[0];
+      const y = p[1] - center[1];
+      const z = p[2] - center[2];
+      const rotatedX = x * cosYaw + z * sinYaw;
+      const rotatedZ = -x * sinYaw + z * cosYaw;
+
+      return [
+        this.width * 0.5 + rotatedX * scale,
+        this.height * 0.5 - rotatedZ * scale,
+        -y / span,
+      ];
+    });
 
     const batches = Array.isArray(model.batches) && model.batches.length
       ? model.batches
