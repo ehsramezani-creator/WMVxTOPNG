@@ -1,11 +1,13 @@
+import Camera from './Camera.js';
+
 export class SoftwareRenderer {
   constructor({ width = 512, height = 512, background = [0, 0, 0, 0], cameraYaw = 0, cameraAxis = 'x' } = {}) {
     this.width = width;
     this.height = height;
     this.background = background;
+    this.camera = new Camera({ yaw: cameraYaw, axis: cameraAxis });
     this.cameraYaw = cameraYaw;
     this.cameraAxis = String(cameraAxis).toLowerCase();
-    if (!['x', 'y', 'z'].includes(this.cameraAxis)) throw new Error(`Invalid cameraAxis: ${cameraAxis}. Use x, y, or z.`);
   }
 
   render(model) {
@@ -17,27 +19,7 @@ export class SoftwareRenderer {
     for (let i = 0; i < pixels.length; i += 4) pixels.set(this.background, i);
 
     const positions = model.vertices.map(v => v.position);
-    let min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
-    for (const p of positions) for (let k = 0; k < 3; k++) { min[k] = Math.min(min[k], p[k]); max[k] = Math.max(max[k], p[k]); }
-    const center = min.map((v, k) => (v + max[k]) * 0.5);
-    const span = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) || 1;
-    const yaw = this.cameraYaw * Math.PI / 180;
-    const c = Math.cos(yaw), s = Math.sin(yaw);
-
-    const viewPoint = p => {
-      let x = p[0] - center[0], y = p[1] - center[1], z = p[2] - center[2];
-      if (this.cameraAxis === 'x') { const a = y * c - z * s, b = y * s + z * c; return [b, a, x]; }
-      if (this.cameraAxis === 'y') { const a = x * c + z * s, b = -x * s + z * c; return [a, b, y]; }
-      const a = x * c - y * s, b = x * s + y * c; return [a, b, z];
-    };
-
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    const view = positions.map(viewPoint);
-    for (const p of view) { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]); }
-    const fitPadding = 0.78;
-    const scale = Math.min((this.width * fitPadding) / Math.max(maxX - minX, 1e-6), (this.height * fitPadding) / Math.max(maxY - minY, 1e-6));
-    const cx = (minX + maxX) * 0.5, cy = (minY + maxY) * 0.5;
-    const projected = view.map(p => [this.width * 0.5 + (p[0] - cx) * scale, this.height * 0.5 - (p[1] - cy) * scale, -p[2] / span]);
+    const projected = this.camera.project(positions, this.width, this.height);
 
     const batches = Array.isArray(model.batches) && model.batches.length ? model.batches : [{ index: 0, firstIndex: 0, indexCount: model.indices.length }];
     for (const batch of batches) {
