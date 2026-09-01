@@ -102,6 +102,7 @@ const automaticOutputPath = !outputDirArg || String(outputDirArg).trim().toLower
 const outputRoot = path.resolve(automaticOutputPath ? buildAutomaticOutputDir(m2Path, modelsRoot) : outputDirArg);
 const orbitPattern = await loadOrbitPattern(configPath);
 const views = buildOrbit(orbitPattern);
+const modelName = path.basename(m2Path, path.extname(m2Path));
 await fs.mkdir(outputRoot, { recursive: true });
 
 for (const view of views) {
@@ -111,7 +112,7 @@ for (const view of views) {
     cameraAzimuth: view.azimuth,
     cameraElevation: view.elevation
   }).render(model);
-  const fileName = `view-${String(view.elevation).padStart(2, '0')}-${String(view.index).padStart(2, '0')}.png`;
+  const fileName = `${modelName}-${String(view.elevation).padStart(2, '0')}-${String(view.index).padStart(2, '0')}.png`;
   const outputPath = path.join(outputRoot, fileName);
   await fs.writeFile(outputPath, encodeRGBA(image.width, image.height, image.pixels));
   console.log(`elevation=${view.elevation} azimuth=${view.azimuth} -> ${outputPath}`);
