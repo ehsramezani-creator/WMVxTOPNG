@@ -29,9 +29,15 @@ async function findDb(root) {
   }
   return null;
 }
+async function loadOrbitPattern(configPath) {
+  if (!configPath) return DEFAULT_ORBIT_PATTERN;
+  const raw = await fs.readFile(path.resolve(configPath), 'utf8');
+  const config = JSON.parse(raw);
+  return config.views ?? config.pattern ?? config;
+}
 
-const [m2Path, outputDir = 'model-orbit', modelsRoot = path.dirname(process.argv[1]), dbRoot = modelsRoot] = process.argv.slice(2);
-if (!m2Path) throw new Error('Usage: node src/tools/render-orbit.js <M2> [outputDir] [modelsRoot] [dbRoot]');
+const [m2Path, outputDir = 'model-orbit', modelsRoot = path.dirname(process.argv[1]), dbRoot = modelsRoot, configPath = path.join('config', 'camera-orbit.json')] = process.argv.slice(2);
+if (!m2Path) throw new Error('Usage: node src/tools/render-orbit.js <M2> [outputDir] [modelsRoot] [dbRoot] [config.json]');
 
 const root = path.resolve(modelsRoot);
 const files = await collectFiles(root);
@@ -79,9 +85,10 @@ const sourceWidth = maxTextureWidth || 512, sourceHeight = maxTextureHeight || 5
 const scale = Math.max(1, MIN_RENDER_RESOLUTION / Math.max(sourceWidth, sourceHeight));
 const renderWidth = Math.ceil(sourceWidth * scale), renderHeight = Math.ceil(sourceHeight * scale);
 const outputRoot = path.resolve(outputDir);
+const orbitPattern = await loadOrbitPattern(configPath);
+const views = buildOrbit(orbitPattern);
 await fs.mkdir(outputRoot, { recursive: true });
 
-const views = buildOrbit(DEFAULT_ORBIT_PATTERN);
 for (const view of views) {
   const elevationName = String(view.elevation).padStart(2, '0');
   const dir = path.join(outputRoot, `elevation-${elevationName}`);
@@ -100,7 +107,8 @@ for (const view of views) {
 console.log(JSON.stringify({
   model: m2.name,
   views: views.length,
-  pattern: DEFAULT_ORBIT_PATTERN,
+  pattern: orbitPattern,
+  config: path.resolve(configPath),
   outputResolution: { width: renderWidth, height: renderHeight },
   output: outputRoot
 }, null, 2));
