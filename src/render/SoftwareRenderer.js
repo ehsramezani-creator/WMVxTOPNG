@@ -1,5 +1,5 @@
 export class SoftwareRenderer {
-  constructor({ width = 512, height = 512, background = [24, 24, 24, 255] } = {}) {
+  constructor({ width = 512, height = 512, background = [0, 0, 0, 0] } = {}) {
     this.width = width;
     this.height = height;
     this.background = background;
