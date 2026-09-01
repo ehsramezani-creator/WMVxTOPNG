@@ -1,9 +1,11 @@
 export class SoftwareRenderer {
-  constructor({ width = 512, height = 512, background = [0, 0, 0, 0], cameraYaw = 0 } = {}) {
+  constructor({ width = 512, height = 512, background = [0, 0, 0, 0], cameraYaw = 0, cameraAxis = 'x' } = {}) {
     this.width = width;
     this.height = height;
     this.background = background;
     this.cameraYaw = cameraYaw;
+    this.cameraAxis = String(cameraAxis).toLowerCase();
+    if (!['x', 'y', 'z'].includes(this.cameraAxis)) throw new Error(`Invalid cameraAxis: ${cameraAxis}. Use x, y, or z.`);
   }
 
   render(model) {
@@ -16,58 +18,28 @@ export class SoftwareRenderer {
 
     const positions = model.vertices.map(v => v.position);
     let min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
-    for (const p of positions) for (let k = 0; k < 3; k++) {
-      min[k] = Math.min(min[k], p[k]);
-      max[k] = Math.max(max[k], p[k]);
-    }
+    for (const p of positions) for (let k = 0; k < 3; k++) { min[k] = Math.min(min[k], p[k]); max[k] = Math.max(max[k], p[k]); }
     const center = min.map((v, k) => (v + max[k]) * 0.5);
     const span = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) || 1;
+    const yaw = this.cameraYaw * Math.PI / 180;
+    const c = Math.cos(yaw), s = Math.sin(yaw);
 
-    const yaw = (this.cameraYaw * Math.PI) / 180;
-    const cosYaw = Math.cos(yaw);
-    const sinYaw = Math.sin(yaw);
+    const viewPoint = p => {
+      let x = p[0] - center[0], y = p[1] - center[1], z = p[2] - center[2];
+      if (this.cameraAxis === 'x') { const a = y * c - z * s, b = y * s + z * c; return [b, a, x]; }
+      if (this.cameraAxis === 'y') { const a = x * c + z * s, b = -x * s + z * c; return [a, b, y]; }
+      const a = x * c - y * s, b = x * s + y * c; return [a, b, z];
+    };
 
-    // Fit against the actual rotated screen-space bounds. A fixed 3D span
-    // clips elongated models at some yaw angles because their projected
-    // width/height changes as they rotate.
-    let projectedMinX = Infinity, projectedMaxX = -Infinity;
-    let projectedMinY = Infinity, projectedMaxY = -Infinity;
-    for (const p of positions) {
-      const x = p[0] - center[0];
-      const z = p[2] - center[2];
-      const rotatedX = x * cosYaw + z * sinYaw;
-      const rotatedZ = -x * sinYaw + z * cosYaw;
-      projectedMinX = Math.min(projectedMinX, rotatedX);
-      projectedMaxX = Math.max(projectedMaxX, rotatedX);
-      projectedMinY = Math.min(projectedMinY, rotatedZ);
-      projectedMaxY = Math.max(projectedMaxY, rotatedZ);
-    }
-
-    const projectedWidth = Math.max(projectedMaxX - projectedMinX, 1e-6);
-    const projectedHeight = Math.max(projectedMaxY - projectedMinY, 1e-6);
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    const view = positions.map(viewPoint);
+    for (const p of view) { minX = Math.min(minX, p[0]); maxX = Math.max(maxX, p[0]); minY = Math.min(minY, p[1]); maxY = Math.max(maxY, p[1]); }
     const fitPadding = 0.78;
-    const scale = Math.min(
-      (this.width * fitPadding) / projectedWidth,
-      (this.height * fitPadding) / projectedHeight
-    );
+    const scale = Math.min((this.width * fitPadding) / Math.max(maxX - minX, 1e-6), (this.height * fitPadding) / Math.max(maxY - minY, 1e-6));
+    const cx = (minX + maxX) * 0.5, cy = (minY + maxY) * 0.5;
+    const projected = view.map(p => [this.width * 0.5 + (p[0] - cx) * scale, this.height * 0.5 - (p[1] - cy) * scale, -p[2] / span]);
 
-    const projected = positions.map(p => {
-      const x = p[0] - center[0];
-      const y = p[1] - center[1];
-      const z = p[2] - center[2];
-      const rotatedX = x * cosYaw + z * sinYaw;
-      const rotatedZ = -x * sinYaw + z * cosYaw;
-      return [
-        this.width * 0.5 + rotatedX * scale,
-        this.height * 0.5 - rotatedZ * scale,
-        -y / span,
-      ];
-    });
-
-    const batches = Array.isArray(model.batches) && model.batches.length
-      ? model.batches
-      : [{ index: 0, firstIndex: 0, indexCount: model.indices.length }];
-
+    const batches = Array.isArray(model.batches) && model.batches.length ? model.batches : [{ index: 0, firstIndex: 0, indexCount: model.indices.length }];
     for (const batch of batches) {
       const first = batch.firstIndex ?? batch.submesh?.firstIndex ?? 0;
       const count = batch.indexCount ?? batch.submesh?.indexCount ?? model.indices.length - first;
@@ -75,16 +47,14 @@ export class SoftwareRenderer {
       const blendMode = material?.blendMode ?? 0;
       const renderFlags = material?.renderFlags?.flags ?? 0;
       const noZWrite = material?.noZWrite === true || (renderFlags & 0x10) !== 0;
-
       for (let i = first; i + 2 < first + count && i + 2 < model.indices.length; i += 3) {
         const ia = model.indices[i], ib = model.indices[i + 1], ic = model.indices[i + 2];
         const a0 = projected[ia], b0 = projected[ib], c0 = projected[ic];
-        if (!a0 || !b0 || !c0) continue;
-        if (Math.abs(edge(a0, b0, c0)) < 1e-8) continue;
+        if (!a0 || !b0 || !c0 || Math.abs(edge(a0, b0, c0)) < 1e-8) continue;
         const a = [a0[0], a0[1], a0[2], model.vertices[ia]?.texCoord?.[0] ?? 0, model.vertices[ia]?.texCoord?.[1] ?? 0];
         const b = [b0[0], b0[1], b0[2], model.vertices[ib]?.texCoord?.[0] ?? 0, model.vertices[ib]?.texCoord?.[1] ?? 0];
-        const c = [c0[0], c0[1], c0[2], model.vertices[ic]?.texCoord?.[0] ?? 0, model.vertices[ic]?.texCoord?.[1] ?? 0];
-        this.#triangle(pixels, depth, a, b, c, material?.image ?? null, blendMode, noZWrite);
+        const cc = [c0[0], c0[1], c0[2], model.vertices[ic]?.texCoord?.[0] ?? 0, model.vertices[ic]?.texCoord?.[1] ?? 0];
+        this.#triangle(pixels, depth, a, b, cc, material?.image ?? null, blendMode, noZWrite);
       }
     }
     return { width: this.width, height: this.height, pixels };
@@ -102,28 +72,17 @@ export class SoftwareRenderer {
       if (image?.pixels?.length && image.width && image.height) {
         let u = w0 * a[3] + w1 * b[3] + w2 * c[3], v = w0 * a[4] + w1 * b[4] + w2 * c[4];
         u = ((u % 1) + 1) % 1; v = ((v % 1) + 1) % 1;
-        const tx = Math.min(image.width - 1, Math.max(0, Math.floor(u * image.width)));
-        const ty = Math.min(image.height - 1, Math.max(0, Math.floor(v * image.height)));
-        const ti = (ty * image.width + tx) * 4;
+        const tx = Math.min(image.width - 1, Math.max(0, Math.floor(u * image.width))), ty = Math.min(image.height - 1, Math.max(0, Math.floor(v * image.height))), ti = (ty * image.width + tx) * 4;
         r = image.pixels[ti]; g = image.pixels[ti + 1]; bch = image.pixels[ti + 2]; alpha = image.pixels[ti + 3];
       }
       const o = index * 4, dr = pixels[o], dg = pixels[o + 1], db = pixels[o + 2], da = pixels[o + 3], sa = alpha / 255, daN = da / 255;
-      if (blendMode === 1) {
-        if (sa < 0.7) continue;
-        pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = bch; pixels[o + 3] = 255;
-      } else if (blendMode === 2) {
-        pixels[o] = Math.round(r * sa + dr * (1 - sa)); pixels[o + 1] = Math.round(g * sa + dg * (1 - sa)); pixels[o + 2] = Math.round(bch * sa + db * (1 - sa)); pixels[o + 3] = Math.round((sa + daN * (1 - sa)) * 255);
-      } else if (blendMode === 3) {
-        pixels[o] = Math.min(255, Math.round(r * (r / 255) + dr)); pixels[o + 1] = Math.min(255, Math.round(g * (g / 255) + dg)); pixels[o + 2] = Math.min(255, Math.round(bch * (bch / 255) + db)); pixels[o + 3] = 255;
-      } else if (blendMode === 4) {
-        pixels[o] = Math.min(255, Math.round(r * sa + dr)); pixels[o + 1] = Math.min(255, Math.round(g * sa + dg)); pixels[o + 2] = Math.min(255, Math.round(bch * sa + db)); pixels[o + 3] = 255;
-      } else if (blendMode === 5 || blendMode === 6) {
-        pixels[o] = Math.min(255, Math.round(2 * dr * r / 255)); pixels[o + 1] = Math.min(255, Math.round(2 * dg * g / 255)); pixels[o + 2] = Math.min(255, Math.round(2 * db * bch / 255)); pixels[o + 3] = 255;
-      } else if (blendMode === 7) {
-        pixels[o] = Math.min(255, Math.round(r + dr * (1 - sa))); pixels[o + 1] = Math.min(255, Math.round(g + dg * (1 - sa))); pixels[o + 2] = Math.min(255, Math.round(bch + db * (1 - sa))); pixels[o + 3] = 255;
-      } else {
-        pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = bch; pixels[o + 3] = alpha;
-      }
+      if (blendMode === 1) { if (sa < 0.7) continue; pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = bch; pixels[o + 3] = 255; }
+      else if (blendMode === 2) { pixels[o] = Math.round(r * sa + dr * (1 - sa)); pixels[o + 1] = Math.round(g * sa + dg * (1 - sa)); pixels[o + 2] = Math.round(bch * sa + db * (1 - sa)); pixels[o + 3] = Math.round((sa + daN * (1 - sa)) * 255); }
+      else if (blendMode === 3) { pixels[o] = Math.min(255, Math.round(r * (r / 255) + dr)); pixels[o + 1] = Math.min(255, Math.round(g * (g / 255) + dg)); pixels[o + 2] = Math.min(255, Math.round(bch * (bch / 255) + db)); pixels[o + 3] = 255; }
+      else if (blendMode === 4) { pixels[o] = Math.min(255, Math.round(r * sa + dr)); pixels[o + 1] = Math.min(255, Math.round(g * sa + dg)); pixels[o + 2] = Math.min(255, Math.round(bch * sa + db)); pixels[o + 3] = 255; }
+      else if (blendMode === 5 || blendMode === 6) { pixels[o] = Math.min(255, Math.round(2 * dr * r / 255)); pixels[o + 1] = Math.min(255, Math.round(2 * dg * g / 255)); pixels[o + 2] = Math.min(255, Math.round(2 * db * bch / 255)); pixels[o + 3] = 255; }
+      else if (blendMode === 7) { pixels[o] = Math.min(255, Math.round(r + dr * (1 - sa))); pixels[o + 1] = Math.min(255, Math.round(g + dg * (1 - sa))); pixels[o + 2] = Math.min(255, Math.round(bch + db * (1 - sa))); pixels[o + 3] = 255; }
+      else { pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = bch; pixels[o + 3] = alpha; }
       if (!noZWrite) depth[index] = z;
     }
   }
