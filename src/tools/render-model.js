@@ -10,7 +10,7 @@ import { encodeRGBA } from '../render/PNGEncoder.js';
 
 function usage() {
   console.error(
-    'Usage: node src/tools/render-model.js <M2> [output.png] [modelsRoot] [dbRoot]'
+    'Usage: node src/tools/render-model.js <M2> [output.png] [modelsRoot] [dbRoot] [yawDegrees]'
   );
   process.exit(2);
 }
@@ -68,9 +68,15 @@ const [
   outputPath = 'model.png',
   modelsRoot = path.dirname(process.argv[1]),
   dbRoot = modelsRoot,
+  yawArg = '0',
 ] = process.argv.slice(2);
 
 if (!m2Path) usage();
+
+const yawDegrees = Number(yawArg);
+if (!Number.isFinite(yawDegrees)) {
+  throw new Error(`Invalid yaw angle: ${yawArg}`);
+}
 
 const root = path.resolve(modelsRoot);
 const files = await collectFiles(root);
@@ -285,6 +291,7 @@ const renderHeight = Math.ceil(sourceHeight * scale);
 const image = new SoftwareRenderer({
   width: renderWidth,
   height: renderHeight,
+  cameraYaw: yawDegrees,
 }).render(model);
 
 await fs.mkdir(path.dirname(path.resolve(outputPath)), {
@@ -306,6 +313,7 @@ console.log(
       skin: path.basename(m2.skin.filePath ?? ''),
       textures: m2.textures.length,
       dbPath,
+      cameraYaw: yawDegrees,
 
       characterTexture: characterTexture.enabled
         ? {
