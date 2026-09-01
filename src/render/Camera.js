@@ -1,33 +1,60 @@
 export class Camera {
-  constructor({ yaw = 0, axis = 'x', fitPadding = 0.78 } = {}) {
-    this.yaw = Number(yaw);
-    this.axis = String(axis).toLowerCase();
-    this.fitPadding = fitPadding;
-    if (!Number.isFinite(this.yaw)) throw new Error(`Invalid camera yaw: ${yaw}`);
-    if (!['x', 'y', 'z'].includes(this.axis)) throw new Error(`Invalid camera axis: ${axis}. Use x, y, or z.`);
+  constructor({ radius = 5, azimuth = 0, elevation = 0, fitPadding = 0.78 } = {}) {
+    this.radius = Number(radius);
+    this.azimuth = Number(azimuth);
+    this.elevation = Number(elevation);
+    this.fitPadding = Number(fitPadding);
+
+    if (!Number.isFinite(this.radius) || this.radius <= 0) {
+      throw new Error(`Invalid camera radius: ${radius}`);
+    }
+    if (!Number.isFinite(this.azimuth)) throw new Error(`Invalid camera azimuth: ${azimuth}`);
+    if (!Number.isFinite(this.elevation) || this.elevation < -90 || this.elevation > 90) {
+      throw new Error(`Invalid camera elevation: ${elevation}. Use -90 to 90.`);
+    }
+  }
+
+  sphericalPosition(target = [0, 0, 0]) {
+    const az = this.azimuth * Math.PI / 180;
+    const el = this.elevation * Math.PI / 180;
+    const cosEl = Math.cos(el);
+
+    return [
+      target[0] + this.radius * cosEl * Math.cos(az),
+      target[1] + this.radius * cosEl * Math.sin(az),
+      target[2] + this.radius * Math.sin(el)
+    ];
   }
 
   viewPoint(point, center) {
-    let x = point[0] - center[0];
-    let y = point[1] - center[1];
-    let z = point[2] - center[2];
-    const angle = this.yaw * Math.PI / 180;
-    const c = Math.cos(angle);
-    const s = Math.sin(angle);
+    const dx = point[0] - center[0];
+    const dy = point[1] - center[1];
+    const dz = point[2] - center[2];
 
-    if (this.axis === 'x') {
-      const a = y * c - z * s;
-      const b = y * s + z * c;
-      return [b, a, x];
-    }
-    if (this.axis === 'y') {
-      const a = x * c + z * s;
-      const b = -x * s + z * c;
-      return [a, b, y];
-    }
-    const a = x * c - y * s;
-    const b = x * s + y * c;
-    return [a, b, z];
+    const az = this.azimuth * Math.PI / 180;
+    const el = this.elevation * Math.PI / 180;
+    const ca = Math.cos(az), sa = Math.sin(az);
+    const ce = Math.cos(el), se = Math.sin(el);
+
+    // Camera looks toward the model. Build a stable orbit basis:
+    // right = horizontal tangent, up = elevated tangent.
+    const rightX = -sa;
+    const rightY = ca;
+    const rightZ = 0;
+
+    const upX = -se * ca;
+    const upY = -se * sa;
+    const upZ = ce;
+
+    const forwardX = -ce * ca;
+    const forwardY = -ce * sa;
+    const forwardZ = -se;
+
+    const screenX = dx * rightX + dy * rightY + dz * rightZ;
+    const screenY = dx * upX + dy * upY + dz * upZ;
+    const depth = dx * forwardX + dy * forwardY + dz * forwardZ;
+
+    return [screenX, screenY, depth];
   }
 
   project(positions, width, height) {
