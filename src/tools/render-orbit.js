@@ -46,7 +46,7 @@ function buildAutomaticOutputDir(m2Path, modelsRoot) {
 
   const relativeModelDir = path.dirname(relativeModelPath);
   const outputRoot = path.join(path.dirname(root), 'ModelsTreeOutPut');
-  return path.join(outputRoot, relativeModelDir, path.basename(modelPath, path.extname(modelPath)) + '-orbit');
+  return path.join(outputRoot, relativeModelDir);
 }
 
 const args = process.argv.slice(2);
@@ -105,18 +105,16 @@ const views = buildOrbit(orbitPattern);
 await fs.mkdir(outputRoot, { recursive: true });
 
 for (const view of views) {
-  const elevationName = String(view.elevation).padStart(2, '0');
-  const dir = path.join(outputRoot, `elevation-${elevationName}`);
-  await fs.mkdir(dir, { recursive: true });
   const image = new SoftwareRenderer({
     width: renderWidth,
     height: renderHeight,
     cameraAzimuth: view.azimuth,
     cameraElevation: view.elevation
   }).render(model);
-  const fileName = `view-${String(view.index).padStart(3, '0')}.png`;
-  await fs.writeFile(path.join(dir, fileName), encodeRGBA(image.width, image.height, image.pixels));
-  console.log(`elevation=${view.elevation} azimuth=${view.azimuth} -> ${path.join(dir, fileName)}`);
+  const fileName = `view-${String(view.elevation).padStart(2, '0')}-${String(view.index).padStart(2, '0')}.png`;
+  const outputPath = path.join(outputRoot, fileName);
+  await fs.writeFile(outputPath, encodeRGBA(image.width, image.height, image.pixels));
+  console.log(`elevation=${view.elevation} azimuth=${view.azimuth} -> ${outputPath}`);
 }
 
 console.log(JSON.stringify({
