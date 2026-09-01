@@ -1,10 +1,5 @@
 export class SoftwareRenderer {
-  constructor({
-    width = 512,
-    height = 512,
-    background = [0, 0, 0, 0],
-    cameraYaw = 0,
-  } = {}) {
+  constructor({ width = 512, height = 512, background = [0, 0, 0, 0], cameraYaw = 0 } = {}) {
     this.width = width;
     this.height = height;
     this.background = background;
@@ -27,26 +22,41 @@ export class SoftwareRenderer {
     }
     const center = min.map((v, k) => (v + max[k]) * 0.5);
     const span = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]) || 1;
-    const scale = Math.min(this.width, this.height) * 0.78 / span;
 
     const yaw = (this.cameraYaw * Math.PI) / 180;
     const cosYaw = Math.cos(yaw);
     const sinYaw = Math.sin(yaw);
 
-    /*
-     * Orbit the camera around the model's vertical Y axis.
-     *
-     * The model is centered before rotation, so changing cameraYaw does not
-     * move the model through the frame. Positive angles rotate the view around
-     * the Y axis and keep the existing front view at 0 degrees.
-     */
+    // Fit against the actual rotated screen-space bounds. A fixed 3D span
+    // clips elongated models at some yaw angles because their projected
+    // width/height changes as they rotate.
+    let projectedMinX = Infinity, projectedMaxX = -Infinity;
+    let projectedMinY = Infinity, projectedMaxY = -Infinity;
+    for (const p of positions) {
+      const x = p[0] - center[0];
+      const z = p[2] - center[2];
+      const rotatedX = x * cosYaw + z * sinYaw;
+      const rotatedZ = -x * sinYaw + z * cosYaw;
+      projectedMinX = Math.min(projectedMinX, rotatedX);
+      projectedMaxX = Math.max(projectedMaxX, rotatedX);
+      projectedMinY = Math.min(projectedMinY, rotatedZ);
+      projectedMaxY = Math.max(projectedMaxY, rotatedZ);
+    }
+
+    const projectedWidth = Math.max(projectedMaxX - projectedMinX, 1e-6);
+    const projectedHeight = Math.max(projectedMaxY - projectedMinY, 1e-6);
+    const fitPadding = 0.78;
+    const scale = Math.min(
+      (this.width * fitPadding) / projectedWidth,
+      (this.height * fitPadding) / projectedHeight
+    );
+
     const projected = positions.map(p => {
       const x = p[0] - center[0];
       const y = p[1] - center[1];
       const z = p[2] - center[2];
       const rotatedX = x * cosYaw + z * sinYaw;
       const rotatedZ = -x * sinYaw + z * cosYaw;
-
       return [
         this.width * 0.5 + rotatedX * scale,
         this.height * 0.5 - rotatedZ * scale,
@@ -66,9 +76,6 @@ export class SoftwareRenderer {
       const renderFlags = material?.renderFlags?.flags ?? 0;
       const noZWrite = material?.noZWrite === true || (renderFlags & 0x10) !== 0;
 
-      // Do not perform screen-space winding culling here. The legacy M2 geometry
-      // and the software projection use different coordinate conventions from
-      // the GPU path, and culling was removing the textured character passes.
       for (let i = first; i + 2 < first + count && i + 2 < model.indices.length; i += 3) {
         const ia = model.indices[i], ib = model.indices[i + 1], ic = model.indices[i + 2];
         const a0 = projected[ia], b0 = projected[ib], c0 = projected[ic];
