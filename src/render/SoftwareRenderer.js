@@ -1,12 +1,16 @@
 import Camera from './Camera.js';
 
 export class SoftwareRenderer {
-  constructor({ width = 512, height = 512, background = [0, 0, 0, 0], cameraYaw = 0, cameraAxis = 'x' } = {}) {
+  constructor({ width = 512, height = 512, background = [0, 0, 0, 0], cameraYaw = 0, cameraAxis = 'x', cameraAzimuth = null, cameraElevation = 0, cameraRadius = 5, cameraFitPadding = 0.78 } = {}) {
     this.width = width;
     this.height = height;
     this.background = background;
-    this.camera = new Camera({ yaw: cameraYaw, axis: cameraAxis });
-    this.cameraYaw = cameraYaw;
+    this.cameraAzimuth = cameraAzimuth == null ? cameraYaw : Number(cameraAzimuth);
+    this.cameraElevation = Number(cameraElevation);
+    this.cameraRadius = Number(cameraRadius);
+    this.cameraFitPadding = Number(cameraFitPadding);
+    this.camera = new Camera({ radius: this.cameraRadius, azimuth: this.cameraAzimuth, elevation: this.cameraElevation, fitPadding: this.cameraFitPadding });
+    this.cameraYaw = this.cameraAzimuth;
     this.cameraAxis = String(cameraAxis).toLowerCase();
   }
 
