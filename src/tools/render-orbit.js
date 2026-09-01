@@ -97,7 +97,8 @@ const MIN_RENDER_RESOLUTION = 2048;
 const sourceWidth = maxTextureWidth || 512, sourceHeight = maxTextureHeight || 512;
 const scale = Math.max(1, MIN_RENDER_RESOLUTION / Math.max(sourceWidth, sourceHeight));
 const renderWidth = Math.ceil(sourceWidth * scale), renderHeight = Math.ceil(sourceHeight * scale);
-const outputRoot = path.resolve(outputDirArg ?? buildAutomaticOutputDir(m2Path, modelsRoot));
+const automaticOutputPath = !outputDirArg || !String(outputDirArg).trim();
+const outputRoot = path.resolve(automaticOutputPath ? buildAutomaticOutputDir(m2Path, modelsRoot) : outputDirArg);
 const orbitPattern = await loadOrbitPattern(configPath);
 const views = buildOrbit(orbitPattern);
 await fs.mkdir(outputRoot, { recursive: true });
@@ -124,5 +125,5 @@ console.log(JSON.stringify({
   config: path.resolve(configPath),
   outputResolution: { width: renderWidth, height: renderHeight },
   output: outputRoot,
-  automaticOutputPath: !outputDirArg
+  automaticOutputPath
 }, null, 2));
