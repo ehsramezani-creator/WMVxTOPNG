@@ -36,7 +36,20 @@ async function loadOrbitPattern(configPath) {
   return config.views ?? config.pattern ?? config;
 }
 
-const [m2Path, outputDir = 'model-orbit', modelsRoot = path.dirname(process.argv[1]), dbRoot = modelsRoot, configPath = path.join('config', 'camera-orbit.json')] = process.argv.slice(2);
+function buildAutomaticOutputDir(m2Path, modelsRoot) {
+  const root = path.resolve(modelsRoot);
+  const modelPath = path.resolve(m2Path);
+  const relativeModelPath = path.relative(root, modelPath);
+  if (!relativeModelPath || relativeModelPath.startsWith('..' + path.sep) || path.isAbsolute(relativeModelPath)) {
+    throw new Error(`M2 path must be inside modelsRoot. M2: ${modelPath}, modelsRoot: ${root}`);
+  }
+
+  const relativeModelDir = path.dirname(relativeModelPath);
+  const outputRoot = path.join(path.dirname(root), 'ModelsTreeOutPut');
+  return path.join(outputRoot, relativeModelDir, path.basename(modelPath, path.extname(modelPath)) + '-orbit');
+}
+
+const [m2Path, outputDirArg, modelsRoot = path.dirname(process.argv[1]), dbRoot = modelsRoot, configPath = path.join('config', 'camera-orbit.json')] = process.argv.slice(2);
 if (!m2Path) throw new Error('Usage: node src/tools/render-orbit.js <M2> [outputDir] [modelsRoot] [dbRoot] [config.json]');
 
 const root = path.resolve(modelsRoot);
@@ -84,7 +97,7 @@ const MIN_RENDER_RESOLUTION = 2048;
 const sourceWidth = maxTextureWidth || 512, sourceHeight = maxTextureHeight || 512;
 const scale = Math.max(1, MIN_RENDER_RESOLUTION / Math.max(sourceWidth, sourceHeight));
 const renderWidth = Math.ceil(sourceWidth * scale), renderHeight = Math.ceil(sourceHeight * scale);
-const outputRoot = path.resolve(outputDir);
+const outputRoot = path.resolve(outputDirArg ?? buildAutomaticOutputDir(m2Path, modelsRoot));
 const orbitPattern = await loadOrbitPattern(configPath);
 const views = buildOrbit(orbitPattern);
 await fs.mkdir(outputRoot, { recursive: true });
@@ -110,5 +123,6 @@ console.log(JSON.stringify({
   pattern: orbitPattern,
   config: path.resolve(configPath),
   outputResolution: { width: renderWidth, height: renderHeight },
-  output: outputRoot
+  output: outputRoot,
+  automaticOutputPath: !outputDirArg
 }, null, 2));
