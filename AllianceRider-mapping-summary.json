@@ -1,0 +1,1016 @@
+{
+  "textures": [
+    {
+      "index": 0,
+      "type": 0,
+      "flags": 0,
+      "name": "CREATURE\\GRYPHON\\GRYPHON_SKIN01.BLP"
+    },
+    {
+      "index": 1,
+      "type": 0,
+      "flags": 0,
+      "name": "CREATURE\\ALLIANCERIDER\\WILDHAMMERHEAVY.BLP"
+    },
+    {
+      "index": 2,
+      "type": 0,
+      "flags": 0,
+      "name": "CREATURE\\ALLIANCERIDER\\DWARFMALEHAIRSKIN.BLP"
+    },
+    {
+      "index": 3,
+      "type": 0,
+      "flags": 0,
+      "name": "ITEM\\OBJECTCOMPONENTS\\SHOULDER\\SHOULDER_LEATHER_HORDE_B_03RED.BLP"
+    },
+    {
+      "index": 4,
+      "type": 0,
+      "flags": 3,
+      "name": "ITEM\\OBJECTCOMPONENTS\\WEAPON\\HAMMER_2H_PVPALLIANCE_A_01.BLP"
+    },
+    {
+      "index": 5,
+      "type": 0,
+      "flags": 3,
+      "name": "ITEM\\OBJECTCOMPONENTS\\WEAPON\\ARMORREFLECT4.BLP"
+    },
+    {
+      "index": 6,
+      "type": 0,
+      "flags": 0,
+      "name": "CREATURE\\GRYPHON\\GRYPHON_SKIN02.BLP"
+    }
+  ],
+  "textureLookups": {
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 6,
+    "4": 3,
+    "5": 4,
+    "6": 5
+  },
+  "skinHeader": {
+    "magic": "SKIN",
+    "indicesCount": 2192,
+    "indicesOffset": 48,
+    "trianglesCount": 7926,
+    "trianglesOffset": 4432,
+    "propertiesCount": 2192,
+    "propertiesOffset": 20288,
+    "submeshesCount": 7,
+    "submeshesOffset": 29056,
+    "batchesCount": 8,
+    "batchesOffset": 29392,
+    "bonesCount": 53
+  },
+  "submeshes": [
+    {
+      "id": 0,
+      "level": 0,
+      "vertexStart": 0,
+      "vertexCount": 795,
+      "triangleStart": 0,
+      "triangleCount": 2844,
+      "boneCount": 42,
+      "boneStart": 84,
+      "boneInfluences": 4,
+      "centerBoneIndex": 19,
+      "centerPosition": [
+        0.7049161791801453,
+        0.001880250871181488,
+        1.130136489868164
+      ],
+      "sortCenterPosition": [
+        -0.1022343635559082,
+        -1.1920928955078125e-7,
+        1.4511728286743164
+      ],
+      "sortRadius": 2.403982400894165
+    },
+    {
+      "id": 0,
+      "level": 0,
+      "vertexStart": 795,
+      "vertexCount": 670,
+      "triangleStart": 2844,
+      "triangleCount": 2850,
+      "boneCount": 42,
+      "boneStart": 84,
+      "boneInfluences": 1,
+      "centerBoneIndex": 7,
+      "centerPosition": [
+        0.25807154178619385,
+        0.006003417540341616,
+        1.885447382926941
+      ],
+      "sortCenterPosition": [
+        0.21017023921012878,
+        0.006014972925186157,
+        1.811558723449707
+      ],
+      "sortRadius": 1.0665167570114136
+    },
+    {
+      "id": 0,
+      "level": 0,
+      "vertexStart": 1465,
+      "vertexCount": 122,
+      "triangleStart": 5694,
+      "triangleCount": 426,
+      "boneCount": 42,
+      "boneStart": 84,
+      "boneInfluences": 1,
+      "centerBoneIndex": 7,
+      "centerPosition": [
+        0.23894870281219482,
+        0.0012808293104171753,
+        2.374606132507324
+      ],
+      "sortCenterPosition": [
+        -0.01810227334499359,
+        -0.008376933634281158,
+        2.15303897857666
+      ],
+      "sortRadius": 0.6987628936767578
+    },
+    {
+      "id": 0,
+      "level": 0,
+      "vertexStart": 1587,
+      "vertexCount": 51,
+      "triangleStart": 6120,
+      "triangleCount": 282,
+      "boneCount": 42,
+      "boneStart": 84,
+      "boneInfluences": 4,
+      "centerBoneIndex": 17,
+      "centerPosition": [
+        1.0769739151000977,
+        0.012134297750890255,
+        1.9367402791976929
+      ],
+      "sortCenterPosition": [
+        1.0769739151000977,
+        0.012134297750890255,
+        1.9367402791976929
+      ],
+      "sortRadius": 4.8487229347229
+    },
+    {
+      "id": 0,
+      "level": 0,
+      "vertexStart": 1638,
+      "vertexCount": 98,
+      "triangleStart": 6402,
+      "triangleCount": 492,
+      "boneCount": 42,
+      "boneStart": 84,
+      "boneInfluences": 1,
+      "centerBoneIndex": 7,
+      "centerPosition": [
+        0.13902440667152405,
+        -0.3306330740451813,
+        2.369006872177124
+      ],
+      "sortCenterPosition": [
+        0.13902440667152405,
+        -0.3306330740451813,
+        2.369006872177124
+      ],
+      "sortRadius": 0.3610284626483917
+    },
+    {
+      "id": 0,
+      "level": 0,
+      "vertexStart": 1736,
+      "vertexCount": 26,
+      "triangleStart": 6894,
+      "triangleCount": 96,
+      "boneCount": 42,
+      "boneStart": 84,
+      "boneInfluences": 1,
+      "centerBoneIndex": 7,
+      "centerPosition": [
+        -0.1817733347415924,
+        0.18559320271015167,
+        2.3639957904815674
+      ],
+      "sortCenterPosition": [
+        -0.16979223489761353,
+        0.2483363002538681,
+        2.4143519401550293
+      ],
+      "sortRadius": 0.3671621084213257
+    },
+    {
+      "id": 0,
+      "level": 0,
+      "vertexStart": 1762,
+      "vertexCount": 430,
+      "triangleStart": 6990,
+      "triangleCount": 936,
+      "boneCount": 42,
+      "boneStart": 84,
+      "boneInfluences": 1,
+      "centerBoneIndex": 7,
+      "centerPosition": [
+        -0.2793664336204529,
+        -0.2250155806541443,
+        2.0313212871551514
+      ],
+      "sortCenterPosition": [
+        -0.24047233164310455,
+        -0.0034796595573425293,
+        2.188324451446533
+      ],
+      "sortRadius": 0.855035662651062
+    }
+  ],
+  "batches": [
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 0,
+      "geosetIndex": 0,
+      "colorIndex": 65535,
+      "materialIndex": 0,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 0,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 1,
+      "geosetIndex": 1,
+      "colorIndex": 65535,
+      "materialIndex": 1,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 2,
+      "geosetIndex": 2,
+      "colorIndex": 65535,
+      "materialIndex": 2,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 2,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 4,
+      "geosetIndex": 4,
+      "colorIndex": 65535,
+      "materialIndex": 3,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 4,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 5,
+      "geosetIndex": 5,
+      "colorIndex": 65535,
+      "materialIndex": 4,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 5,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 6,
+      "geosetIndex": 6,
+      "colorIndex": 65535,
+      "materialIndex": 5,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 5,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 6,
+      "geosetIndex": 6,
+      "colorIndex": 65535,
+      "materialIndex": 6,
+      "materialLayer": 1,
+      "textureCount": 1,
+      "textureComboIndex": 6,
+      "textureCoordIndex": 1,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 3,
+      "geosetIndex": 3,
+      "colorIndex": 65535,
+      "materialIndex": 7,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 3,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    }
+  ],
+  "modelBatches": [
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 0,
+      "geosetIndex": 0,
+      "colorIndex": 65535,
+      "materialIndex": 0,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 0,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 0,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 0,
+        "vertexCount": 795,
+        "triangleStart": 0,
+        "triangleCount": 2844,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 4,
+        "centerBoneIndex": 19,
+        "centerPosition": [
+          0.7049161791801453,
+          0.001880250871181488,
+          1.130136489868164
+        ],
+        "sortCenterPosition": [
+          -0.1022343635559082,
+          -1.1920928955078125e-7,
+          1.4511728286743164
+        ],
+        "sortRadius": 2.403982400894165,
+        "index": 0,
+        "firstIndex": 0,
+        "indexCount": 2844
+      }
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 1,
+      "geosetIndex": 1,
+      "colorIndex": 65535,
+      "materialIndex": 1,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 1,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 795,
+        "vertexCount": 670,
+        "triangleStart": 2844,
+        "triangleCount": 2850,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 1,
+        "centerBoneIndex": 7,
+        "centerPosition": [
+          0.25807154178619385,
+          0.006003417540341616,
+          1.885447382926941
+        ],
+        "sortCenterPosition": [
+          0.21017023921012878,
+          0.006014972925186157,
+          1.811558723449707
+        ],
+        "sortRadius": 1.0665167570114136,
+        "index": 1,
+        "firstIndex": 2844,
+        "indexCount": 2850
+      }
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 2,
+      "geosetIndex": 2,
+      "colorIndex": 65535,
+      "materialIndex": 2,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 2,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 2,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 1465,
+        "vertexCount": 122,
+        "triangleStart": 5694,
+        "triangleCount": 426,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 1,
+        "centerBoneIndex": 7,
+        "centerPosition": [
+          0.23894870281219482,
+          0.0012808293104171753,
+          2.374606132507324
+        ],
+        "sortCenterPosition": [
+          -0.01810227334499359,
+          -0.008376933634281158,
+          2.15303897857666
+        ],
+        "sortRadius": 0.6987628936767578,
+        "index": 2,
+        "firstIndex": 5694,
+        "indexCount": 426
+      }
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 4,
+      "geosetIndex": 4,
+      "colorIndex": 65535,
+      "materialIndex": 3,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 4,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 3,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 1638,
+        "vertexCount": 98,
+        "triangleStart": 6402,
+        "triangleCount": 492,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 1,
+        "centerBoneIndex": 7,
+        "centerPosition": [
+          0.13902440667152405,
+          -0.3306330740451813,
+          2.369006872177124
+        ],
+        "sortCenterPosition": [
+          0.13902440667152405,
+          -0.3306330740451813,
+          2.369006872177124
+        ],
+        "sortRadius": 0.3610284626483917,
+        "index": 4,
+        "firstIndex": 6402,
+        "indexCount": 492
+      }
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 5,
+      "geosetIndex": 5,
+      "colorIndex": 65535,
+      "materialIndex": 4,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 5,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 4,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 1736,
+        "vertexCount": 26,
+        "triangleStart": 6894,
+        "triangleCount": 96,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 1,
+        "centerBoneIndex": 7,
+        "centerPosition": [
+          -0.1817733347415924,
+          0.18559320271015167,
+          2.3639957904815674
+        ],
+        "sortCenterPosition": [
+          -0.16979223489761353,
+          0.2483363002538681,
+          2.4143519401550293
+        ],
+        "sortRadius": 0.3671621084213257,
+        "index": 5,
+        "firstIndex": 6894,
+        "indexCount": 96
+      }
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 6,
+      "geosetIndex": 6,
+      "colorIndex": 65535,
+      "materialIndex": 5,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 5,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 5,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 1762,
+        "vertexCount": 430,
+        "triangleStart": 6990,
+        "triangleCount": 936,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 1,
+        "centerBoneIndex": 7,
+        "centerPosition": [
+          -0.2793664336204529,
+          -0.2250155806541443,
+          2.0313212871551514
+        ],
+        "sortCenterPosition": [
+          -0.24047233164310455,
+          -0.0034796595573425293,
+          2.188324451446533
+        ],
+        "sortRadius": 0.855035662651062,
+        "index": 6,
+        "firstIndex": 6990,
+        "indexCount": 936
+      }
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 6,
+      "geosetIndex": 6,
+      "colorIndex": 65535,
+      "materialIndex": 6,
+      "materialLayer": 1,
+      "textureCount": 1,
+      "textureComboIndex": 6,
+      "textureCoordIndex": 1,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 6,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 1762,
+        "vertexCount": 430,
+        "triangleStart": 6990,
+        "triangleCount": 936,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 1,
+        "centerBoneIndex": 7,
+        "centerPosition": [
+          -0.2793664336204529,
+          -0.2250155806541443,
+          2.0313212871551514
+        ],
+        "sortCenterPosition": [
+          -0.24047233164310455,
+          -0.0034796595573425293,
+          2.188324451446533
+        ],
+        "sortRadius": 0.855035662651062,
+        "index": 6,
+        "firstIndex": 6990,
+        "indexCount": 936
+      }
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 3,
+      "geosetIndex": 3,
+      "colorIndex": 65535,
+      "materialIndex": 7,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 3,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 7,
+      "submesh": {
+        "id": 0,
+        "level": 0,
+        "vertexStart": 1587,
+        "vertexCount": 51,
+        "triangleStart": 6120,
+        "triangleCount": 282,
+        "boneCount": 42,
+        "boneStart": 84,
+        "boneInfluences": 4,
+        "centerBoneIndex": 17,
+        "centerPosition": [
+          1.0769739151000977,
+          0.012134297750890255,
+          1.9367402791976929
+        ],
+        "sortCenterPosition": [
+          1.0769739151000977,
+          0.012134297750890255,
+          1.9367402791976929
+        ],
+        "sortRadius": 4.8487229347229,
+        "index": 3,
+        "firstIndex": 6120,
+        "indexCount": 282
+      }
+    }
+  ],
+  "resolvedMaterials": [
+    {
+      "index": 0,
+      "textureLookupIndex": 0,
+      "textureIndex": 0,
+      "texture": {
+        "index": 0,
+        "type": 0,
+        "flags": 0,
+        "name": "CREATURE\\GRYPHON\\GRYPHON_SKIN01.BLP"
+      },
+      "renderFlagsIndex": 0,
+      "renderFlags": {
+        "index": 0,
+        "flags": 4,
+        "blendingMode": 1
+      },
+      "blendMode": 1,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "index": 1,
+      "textureLookupIndex": 1,
+      "textureIndex": 1,
+      "texture": {
+        "index": 1,
+        "type": 0,
+        "flags": 0,
+        "name": "CREATURE\\ALLIANCERIDER\\WILDHAMMERHEAVY.BLP"
+      },
+      "renderFlagsIndex": 1,
+      "renderFlags": {
+        "index": 1,
+        "flags": 0,
+        "blendingMode": 0
+      },
+      "blendMode": 0,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "index": 2,
+      "textureLookupIndex": 2,
+      "textureIndex": 2,
+      "texture": {
+        "index": 2,
+        "type": 0,
+        "flags": 0,
+        "name": "CREATURE\\ALLIANCERIDER\\DWARFMALEHAIRSKIN.BLP"
+      },
+      "renderFlagsIndex": 2,
+      "renderFlags": {
+        "index": 2,
+        "flags": 4,
+        "blendingMode": 1
+      },
+      "blendMode": 1,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "index": 3,
+      "textureLookupIndex": 4,
+      "textureIndex": 3,
+      "texture": {
+        "index": 3,
+        "type": 0,
+        "flags": 0,
+        "name": "ITEM\\OBJECTCOMPONENTS\\SHOULDER\\SHOULDER_LEATHER_HORDE_B_03RED.BLP"
+      },
+      "renderFlagsIndex": 3,
+      "renderFlags": {
+        "index": 3,
+        "flags": 0,
+        "blendingMode": 0
+      },
+      "blendMode": 0,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "index": 4,
+      "textureLookupIndex": 5,
+      "textureIndex": 4,
+      "texture": {
+        "index": 4,
+        "type": 0,
+        "flags": 3,
+        "name": "ITEM\\OBJECTCOMPONENTS\\WEAPON\\HAMMER_2H_PVPALLIANCE_A_01.BLP"
+      },
+      "renderFlagsIndex": 4,
+      "renderFlags": {
+        "index": 4,
+        "flags": 0,
+        "blendingMode": 0
+      },
+      "blendMode": 0,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "index": 5,
+      "textureLookupIndex": 5,
+      "textureIndex": 4,
+      "texture": {
+        "index": 4,
+        "type": 0,
+        "flags": 3,
+        "name": "ITEM\\OBJECTCOMPONENTS\\WEAPON\\HAMMER_2H_PVPALLIANCE_A_01.BLP"
+      },
+      "renderFlagsIndex": 5,
+      "renderFlags": {
+        "index": 5,
+        "flags": 0,
+        "blendingMode": 0
+      },
+      "blendMode": 0,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "index": 6,
+      "textureLookupIndex": 6,
+      "textureIndex": 5,
+      "texture": {
+        "index": 5,
+        "type": 0,
+        "flags": 3,
+        "name": "ITEM\\OBJECTCOMPONENTS\\WEAPON\\ARMORREFLECT4.BLP"
+      },
+      "renderFlagsIndex": 6,
+      "renderFlags": {
+        "index": 6,
+        "flags": 16,
+        "blendingMode": 6
+      },
+      "blendMode": 6,
+      "materialLayer": 1,
+      "textureCount": 1,
+      "textureCoordIndex": 1,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    },
+    {
+      "index": 7,
+      "textureLookupIndex": 3,
+      "textureIndex": 6,
+      "texture": {
+        "index": 6,
+        "type": 0,
+        "flags": 0,
+        "name": "CREATURE\\GRYPHON\\GRYPHON_SKIN02.BLP"
+      },
+      "renderFlagsIndex": 7,
+      "renderFlags": {
+        "index": 7,
+        "flags": 0,
+        "blendingMode": 1
+      },
+      "blendMode": 1,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0
+    }
+  ],
+  "resolvedBatches": [
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 0,
+      "geosetIndex": 0,
+      "colorIndex": 65535,
+      "materialIndex": 0,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 0,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 0,
+      "materialIndexResolved": 0
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 1,
+      "geosetIndex": 1,
+      "colorIndex": 65535,
+      "materialIndex": 1,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 1,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 1,
+      "materialIndexResolved": 1
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 2,
+      "geosetIndex": 2,
+      "colorIndex": 65535,
+      "materialIndex": 2,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 2,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 2,
+      "materialIndexResolved": 2
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 4,
+      "geosetIndex": 4,
+      "colorIndex": 65535,
+      "materialIndex": 3,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 4,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 3,
+      "materialIndexResolved": 3
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 5,
+      "geosetIndex": 5,
+      "colorIndex": 65535,
+      "materialIndex": 4,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 5,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 4,
+      "materialIndexResolved": 4
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 6,
+      "geosetIndex": 6,
+      "colorIndex": 65535,
+      "materialIndex": 5,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 5,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 5,
+      "materialIndexResolved": 5
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 6,
+      "geosetIndex": 6,
+      "colorIndex": 65535,
+      "materialIndex": 6,
+      "materialLayer": 1,
+      "textureCount": 1,
+      "textureComboIndex": 6,
+      "textureCoordIndex": 1,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 6,
+      "materialIndexResolved": 6
+    },
+    {
+      "flags": 16,
+      "priorityPlane": 0,
+      "shader": 0,
+      "skinSectionIndex": 3,
+      "geosetIndex": 3,
+      "colorIndex": 65535,
+      "materialIndex": 7,
+      "materialLayer": 0,
+      "textureCount": 1,
+      "textureComboIndex": 3,
+      "textureCoordIndex": 0,
+      "textureWeightIndex": 0,
+      "textureTransformIndex": 0,
+      "index": 7,
+      "materialIndexResolved": 7
+    }
+  ]
+}
