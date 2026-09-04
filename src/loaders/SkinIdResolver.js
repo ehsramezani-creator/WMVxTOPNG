@@ -80,15 +80,22 @@ class CreatureSkinIdProvider {
       };
     }
 
+    // WMVx stores TextureGroups in std::set<TextureGroup>. The comparator
+    // compares only texture[0..2], not the numeric group ID. Therefore display
+    // records with identical texture triplets collapse into one group. The ID
+    // exposed by the Skins UI is the ID of the first record in each such group.
+    const groups = inspection.textureGroups ?? inspection.displayInfos;
+
     return {
       provider: this.name,
       supported: true,
       modelDataId: inspection.modelData?.id ?? null,
-      skinIds: inspection.displayInfos.map(displayInfo => displayInfo.id),
-      groups: inspection.displayInfos.map(displayInfo => ({
-        id: displayInfo.id,
-        modelId: displayInfo.modelId,
-        hasTextures: displayInfo.hasSkins,
+      skinIds: groups.map(group => group.id),
+      groups: groups.map(group => ({
+        id: group.id,
+        modelId: group.modelId,
+        hasTextures: group.hasSkins,
+        textures: group.textureVariations,
       })),
     };
   }
