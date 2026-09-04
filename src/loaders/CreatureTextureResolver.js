@@ -1,6 +1,8 @@
-﻿import path from 'node:path';
+import path from 'node:path';
 import { CreatureDisplayInfoDBC } from './CreatureDisplayInfoDBC.js';
 import { CreatureModelDataDBC } from './CreatureModelDataDBC.js';
+
+const CREATURE_TEXTURE_BASE_TYPE = 11;
 
 function normalize(p) {
   return String(p ?? '')
@@ -91,39 +93,22 @@ export class CreatureTextureResolver {
   resolveTextureOverrides(model, resolution) {
     if (!model || !resolution?.enabled) return [];
 
-    const textures = Array.isArray(model.textures) ? model.textures : [];
     const textureFiles = Array.isArray(resolution.textureFiles)
       ? resolution.textureFiles
       : [];
 
-    const normalizeName = value => String(value ?? '')
-      .replaceAll('\\', '/')
-      .replace(/\.[^./]+$/, '')
-      .split('/')
-      .pop()
-      .toLowerCase();
+    return textureFiles
+      .map((entry, slot) => {
+        if (!entry?.filePath || slot > 2) return null;
 
-    const overrides = [];
-
-    for (const entry of textureFiles) {
-      if (!entry?.filePath) continue;
-
-      const target = normalizeName(entry.name);
-
-      const textureIndex = textures.findIndex(texture =>
-        normalizeName(texture?.name) === target
-      );
-
-      if (textureIndex >= 0) {
-        overrides.push({
-          textureIndex,
+        return {
+          slot,
+          textureType: CREATURE_TEXTURE_BASE_TYPE + slot,
           name: entry.name,
           filePath: entry.filePath,
-        });
-      }
-    }
-
-    return overrides;
+        };
+      })
+      .filter(Boolean);
   }
 
   async resolve(model, options = {}) {
@@ -249,8 +234,3 @@ export class CreatureTextureResolver {
 }
 
 export default CreatureTextureResolver;
-
-
-
-
-
