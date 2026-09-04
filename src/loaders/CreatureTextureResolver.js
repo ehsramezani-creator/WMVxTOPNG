@@ -44,18 +44,20 @@ function resolveTextureName(files, name, modelPath = '') {
 
   const preferred = `${modelDir}/${targetName}`;
 
-  const direct = files.get(normalize(textureName));
+  const direct = files?.get(normalize(textureName));
   if (direct) return direct;
 
-  const withExtension = files.get(normalize(fileName));
+  const withExtension = files?.get(normalize(fileName));
   if (withExtension) return withExtension;
 
-  const nearby = files.get(preferred);
+  const nearby = files?.get(preferred);
   if (nearby) return nearby;
 
-  for (const [key, filePath] of files) {
-    if (path.basename(key).toLowerCase() === targetName) {
-      return filePath;
+  if (files) {
+    for (const [key, filePath] of files) {
+      if (path.basename(key).toLowerCase() === targetName) {
+        return filePath;
+      }
     }
   }
 
@@ -87,6 +89,104 @@ export class CreatureTextureResolver {
     return {
       displayInfoDBC: this.displayInfoDBC,
       modelDataDBC: this.modelDataDBC,
+    };
+  }
+
+  async inspect(model, options = {}) {
+    const modelPath = model?.filePath ?? model?.source ?? '';
+
+    if (!modelPath) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'model-path-not-provided',
+      };
+    }
+
+    await this.loadDBCs({
+      displayInfoPath: options.displayInfoPath,
+      modelDataPath: options.modelDataPath,
+    });
+
+    if (!this.modelDataDBC) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'CreatureModelData.dbc-not-available',
+        modelPath,
+      };
+    }
+
+    if (!this.displayInfoDBC) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'CreatureDisplayInfo.dbc-not-available',
+        modelPath,
+      };
+    }
+
+    const modelData = this.modelDataDBC.records.find(record =>
+      modelPathMatches(record.modelName, modelPath)
+    );
+
+    if (!modelData) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'creature-model-data-not-found',
+        modelPath,
+      };
+    }
+
+    const displayInfos =
+      this.displayInfoDBC.findByModelId(modelData.id);
+
+    const groups = displayInfos.map(displayInfo => {
+      const textures = Array.isArray(displayInfo.textures)
+        ? displayInfo.textures
+        : [];
+
+      const slots = textures
+        .map((name, slot) => {
+          if (!name) return null;
+
+          return {
+            slot,
+            textureType: CREATURE_TEXTURE_BASE_TYPE + slot,
+            name,
+            filePath: resolveTextureName(
+              this.files,
+              name,
+              modelPath
+            ),
+          };
+        })
+        .filter(Boolean);
+
+      return {
+        id: displayInfo.id,
+        modelId: displayInfo.modelId,
+        extendedDisplayInfoId:
+          displayInfo.extendedDisplayInfoId,
+        textureVariations: textures,
+        slots,
+        hasSkins: slots.length > 0,
+      };
+    });
+
+    return {
+      isCreatureModel: true,
+      hasSkins: groups.some(group => group.hasSkins),
+      modelPath,
+      modelData: {
+        id: modelData.id,
+        modelName: modelData.modelName,
+        flags: modelData.flags,
+        sizeClass: modelData.sizeClass,
+        modelScale: modelData.modelScale,
+      },
+      displayInfos: groups,
     };
   }
 
@@ -204,9 +304,7 @@ export class CreatureTextureResolver {
 
     return {
       enabled: true,
-
       modelPath,
-
       modelData: {
         id: modelData.id,
         flags: modelData.flags,
@@ -214,20 +312,15 @@ export class CreatureTextureResolver {
         sizeClass: modelData.sizeClass,
         modelScale: modelData.modelScale,
       },
-
       displayInfo: {
         id: selected.id,
         modelId: selected.modelId,
         extendedDisplayInfoId: selected.extendedDisplayInfoId,
         textures: selected.textures,
       },
-
       groups,
-
       textureNames: selected.textures,
-
       textureFiles: selected.textureFiles,
-
       missing,
     };
   }
