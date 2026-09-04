@@ -64,6 +64,31 @@ function resolveTextureName(files, name, modelPath = '') {
   return null;
 }
 
+// WMVx's TextureGroup::operator< compares texture[0], texture[1], and
+// texture[2] lexicographically and does not compare the group ID. Reproduce
+// that set identity here so the same CreatureDisplayInfo records collapse into
+// the same TextureGroup as they do in WMVx.
+function textureGroupKey(textures) {
+  return [0, 1, 2]
+    .map(index => normalize(textures[index] ?? ''))
+    .join('\u0000');
+}
+
+function deduplicateTextureGroups(groups) {
+  const seen = new Set();
+  const result = [];
+
+  for (const group of groups) {
+    const key = textureGroupKey(group.textureVariations);
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    result.push(group);
+  }
+
+  return result;
+}
+
 export class CreatureTextureResolver {
   constructor({
     files,
@@ -142,7 +167,7 @@ export class CreatureTextureResolver {
     const displayInfos =
       this.displayInfoDBC.findByModelId(modelData.id);
 
-    const groups = displayInfos.map(displayInfo => {
+    const allGroups = displayInfos.map(displayInfo => {
       const textures = Array.isArray(displayInfo.textures)
         ? displayInfo.textures
         : [];
@@ -175,9 +200,11 @@ export class CreatureTextureResolver {
       };
     });
 
+    const textureGroups = deduplicateTextureGroups(allGroups);
+
     return {
       isCreatureModel: true,
-      hasSkins: groups.some(group => group.hasSkins),
+      hasSkins: textureGroups.some(group => group.hasSkins),
       modelPath,
       modelData: {
         id: modelData.id,
@@ -186,7 +213,8 @@ export class CreatureTextureResolver {
         sizeClass: modelData.sizeClass,
         modelScale: modelData.modelScale,
       },
-      displayInfos: groups,
+      displayInfos: allGroups,
+      textureGroups,
     };
   }
 
