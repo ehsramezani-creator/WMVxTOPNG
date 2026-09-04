@@ -94,9 +94,9 @@ async function decodeTexture(name) {
 }
 const materialImages = [];
 
-const creatureOverrideByTextureIndex = new Map(
+const creatureOverrideByTextureType = new Map(
   creatureOverrides.map(override => [
-    override.textureIndex,
+    override.textureType,
     override,
   ])
 );
@@ -105,7 +105,7 @@ for (const textureName of characterTexture.textureNames ?? []) await decodeTextu
 for (const material of resolvedMaterials.materials) {
   const texture = material.texture; let image = null;
   const creatureOverride =
-    creatureOverrideByTextureIndex.get(material.textureIndex) ?? null;
+    creatureOverrideByTextureType.get(texture?.type) ?? null;
   if (texture?.name) { textureStats.referenced++; image = await decodeTexture(texture.name); if (image) { textureStats.found++; textureStats.decoded++; } else textureStats.missing.push(texture.name); }
 
   if (creatureTexture.enabled && creatureOverride?.filePath) {
