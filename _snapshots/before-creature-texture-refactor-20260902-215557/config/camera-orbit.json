@@ -1,0 +1,9 @@
+{
+  "views": [
+    { "elevation": 0, "count": 12 },
+    { "elevation": -30, "count": 8 },
+    { "elevation": -45, "count": 6 },
+    { "elevation": -60, "count": 4 },
+    { "elevation": -90, "count": 1 }
+  ]
+}

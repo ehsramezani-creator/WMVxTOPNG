@@ -1,0 +1,59 @@
+{
+  "enabled": true,
+  "modelPath": "./ModelsTree/Creature/ALLIANCERIDER/AllianceRider.m2",
+  "modelData": {
+    "id": 2332,
+    "flags": 1,
+    "modelName": "Creature\\AllianceRider\\AllianceRider.mdx",
+    "sizeClass": 0,
+    "modelScale": 1
+  },
+  "displayInfo": {
+    "id": 17202,
+    "modelId": 2332,
+    "extendedDisplayInfoId": 0,
+    "textures": [
+      "WildHammerHeavy",
+      "DwarfMaleHairSkin"
+    ]
+  },
+  "groups": [
+    {
+      "id": 17202,
+      "modelId": 2332,
+      "extendedDisplayInfoId": 0,
+      "textures": [
+        "WildHammerHeavy",
+        "DwarfMaleHairSkin"
+      ],
+      "textureFiles": [
+        {
+          "name": "WildHammerHeavy",
+          "filePath": null
+        },
+        {
+          "name": "DwarfMaleHairSkin",
+          "filePath": null
+        }
+      ]
+    }
+  ],
+  "textureNames": [
+    "WildHammerHeavy",
+    "DwarfMaleHairSkin"
+  ],
+  "textureFiles": [
+    {
+      "name": "WildHammerHeavy",
+      "filePath": null
+    },
+    {
+      "name": "DwarfMaleHairSkin",
+      "filePath": null
+    }
+  ],
+  "missing": [
+    "WildHammerHeavy",
+    "DwarfMaleHairSkin"
+  ]
+}

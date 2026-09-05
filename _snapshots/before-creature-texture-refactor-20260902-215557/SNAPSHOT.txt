@@ -1,0 +1,6 @@
+﻿WMVxTOPNG local snapshot
+Created: 2026-09-02 21:55:57
+Purpose: Known-good state after successful 31-view CameraOrbit rendering
+Orbit views: 31
+Output resolution: 2048x2048
+Creature test model: AllianceRider

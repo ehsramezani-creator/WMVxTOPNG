@@ -1,0 +1,66 @@
+﻿[
+    {
+        "Test":  "01",
+        "Name":  "Boxtest",
+        "Model":  "xyz",
+        "Skins":  "(none)",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    },
+    {
+        "Test":  "02",
+        "Name":  "FishingBox",
+        "Model":  "FishingBox",
+        "Skins":  "(none)",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    },
+    {
+        "Test":  "03",
+        "Name":  "Dam",
+        "Model":  "outland_bone_dam",
+        "Skins":  "(none)",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    },
+    {
+        "Test":  "04",
+        "Name":  "AllianceRider",
+        "Model":  "AllianceRider",
+        "Skins":  "17202",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    },
+    {
+        "Test":  "05",
+        "Name":  "GryphonPet",
+        "Model":  "GryphonPet",
+        "Skins":  "30412",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    },
+    {
+        "Test":  "06",
+        "Name":  "FelGolem",
+        "Model":  "FelGolem",
+        "Skins":  "22733",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    },
+    {
+        "Test":  "07",
+        "Name":  "SHARK",
+        "Model":  "HammerHead",
+        "Skins":  "2851, 12196, 12198",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    },
+    {
+        "Test":  "07",
+        "Name":  "SHARK",
+        "Model":  "Shark",
+        "Skins":  "1557, 12193, 12200",
+        "Render":  "PASS",
+        "Orbit":  "31 views"
+    }
+]

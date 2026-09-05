@@ -1,0 +1,4 @@
+﻿WMVxTOPNG local snapshot
+Created: 2026-09-04 00:20:19
+Purpose: Backup before restoring known-good snapshot
+Restoring: before-creature-texture-refactor-20260902-215557
