@@ -2,6 +2,8 @@
 import { CreatureDisplayInfoDBC } from './CreatureDisplayInfoDBC.js';
 import { CreatureModelDataDBC } from './CreatureModelDataDBC.js';
 
+const CREATURE_TEXTURE_BASE_TYPE = 11;
+
 function normalize(p) {
   return String(p ?? '')
     .replaceAll('\\', '/')
@@ -42,22 +44,49 @@ function resolveTextureName(files, name, modelPath = '') {
 
   const preferred = `${modelDir}/${targetName}`;
 
-  const direct = files.get(normalize(textureName));
+  const direct = files?.get(normalize(textureName));
   if (direct) return direct;
 
-  const withExtension = files.get(normalize(fileName));
+  const withExtension = files?.get(normalize(fileName));
   if (withExtension) return withExtension;
 
-  const nearby = files.get(preferred);
+  const nearby = files?.get(preferred);
   if (nearby) return nearby;
 
-  for (const [key, filePath] of files) {
-    if (path.basename(key).toLowerCase() === targetName) {
-      return filePath;
+  if (files) {
+    for (const [key, filePath] of files) {
+      if (path.basename(key).toLowerCase() === targetName) {
+        return filePath;
+      }
     }
   }
 
   return null;
+}
+
+// WMVx's TextureGroup::operator< compares texture[0], texture[1], and
+// texture[2] lexicographically and does not compare the group ID. Reproduce
+// that set identity here so the same CreatureDisplayInfo records collapse into
+// the same TextureGroup as they do in WMVx.
+function textureGroupKey(textures) {
+  return [0, 1, 2]
+    .map(index => normalize(textures[index] ?? ''))
+    .join('\u0000');
+}
+
+function deduplicateTextureGroups(groups) {
+  const seen = new Set();
+  const result = [];
+
+  for (const group of groups) {
+    const key = textureGroupKey(group.textureVariations);
+    if (seen.has(key)) continue;
+
+    seen.add(key);
+    result.push(group);
+  }
+
+  return result;
 }
 
 export class CreatureTextureResolver {
@@ -88,42 +117,126 @@ export class CreatureTextureResolver {
     };
   }
 
+  async inspect(model, options = {}) {
+    const modelPath = model?.filePath ?? model?.source ?? '';
+
+    if (!modelPath) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'model-path-not-provided',
+      };
+    }
+
+    await this.loadDBCs({
+      displayInfoPath: options.displayInfoPath,
+      modelDataPath: options.modelDataPath,
+    });
+
+    if (!this.modelDataDBC) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'CreatureModelData.dbc-not-available',
+        modelPath,
+      };
+    }
+
+    if (!this.displayInfoDBC) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'CreatureDisplayInfo.dbc-not-available',
+        modelPath,
+      };
+    }
+
+    const modelData = this.modelDataDBC.records.find(record =>
+      modelPathMatches(record.modelName, modelPath)
+    );
+
+    if (!modelData) {
+      return {
+        isCreatureModel: false,
+        hasSkins: false,
+        reason: 'creature-model-data-not-found',
+        modelPath,
+      };
+    }
+
+    const displayInfos =
+      this.displayInfoDBC.findByModelId(modelData.id);
+
+    const allGroups = displayInfos.map(displayInfo => {
+      const textures = Array.isArray(displayInfo.textures)
+        ? displayInfo.textures
+        : [];
+
+      const slots = textures
+        .map((name, slot) => {
+          if (!name) return null;
+
+          return {
+            slot,
+            textureType: CREATURE_TEXTURE_BASE_TYPE + slot,
+            name,
+            filePath: resolveTextureName(
+              this.files,
+              name,
+              modelPath
+            ),
+          };
+        })
+        .filter(Boolean);
+
+      return {
+        id: displayInfo.id,
+        modelId: displayInfo.modelId,
+        extendedDisplayInfoId:
+          displayInfo.extendedDisplayInfoId,
+        textureVariations: textures,
+        slots,
+        hasSkins: slots.length > 0,
+      };
+    });
+
+    const textureGroups = deduplicateTextureGroups(allGroups);
+
+    return {
+      isCreatureModel: true,
+      hasSkins: textureGroups.some(group => group.hasSkins),
+      modelPath,
+      modelData: {
+        id: modelData.id,
+        modelName: modelData.modelName,
+        flags: modelData.flags,
+        sizeClass: modelData.sizeClass,
+        modelScale: modelData.modelScale,
+      },
+      displayInfos: allGroups,
+      textureGroups,
+    };
+  }
+
   resolveTextureOverrides(model, resolution) {
     if (!model || !resolution?.enabled) return [];
 
-    const textures = Array.isArray(model.textures) ? model.textures : [];
     const textureFiles = Array.isArray(resolution.textureFiles)
       ? resolution.textureFiles
       : [];
 
-    const normalizeName = value => String(value ?? '')
-      .replaceAll('\\', '/')
-      .replace(/\.[^./]+$/, '')
-      .split('/')
-      .pop()
-      .toLowerCase();
+    return textureFiles
+      .map((entry, slot) => {
+        if (!entry?.filePath || slot > 2) return null;
 
-    const overrides = [];
-
-    for (const entry of textureFiles) {
-      if (!entry?.filePath) continue;
-
-      const target = normalizeName(entry.name);
-
-      const textureIndex = textures.findIndex(texture =>
-        normalizeName(texture?.name) === target
-      );
-
-      if (textureIndex >= 0) {
-        overrides.push({
-          textureIndex,
+        return {
+          slot,
+          textureType: CREATURE_TEXTURE_BASE_TYPE + slot,
           name: entry.name,
           filePath: entry.filePath,
-        });
-      }
-    }
-
-    return overrides;
+        };
+      })
+      .filter(Boolean);
   }
 
   async resolve(model, options = {}) {
@@ -219,9 +332,7 @@ export class CreatureTextureResolver {
 
     return {
       enabled: true,
-
       modelPath,
-
       modelData: {
         id: modelData.id,
         flags: modelData.flags,
@@ -229,28 +340,18 @@ export class CreatureTextureResolver {
         sizeClass: modelData.sizeClass,
         modelScale: modelData.modelScale,
       },
-
       displayInfo: {
         id: selected.id,
         modelId: selected.modelId,
         extendedDisplayInfoId: selected.extendedDisplayInfoId,
         textures: selected.textures,
       },
-
       groups,
-
       textureNames: selected.textures,
-
       textureFiles: selected.textureFiles,
-
       missing,
     };
   }
 }
 
 export default CreatureTextureResolver;
-
-
-
-
-
