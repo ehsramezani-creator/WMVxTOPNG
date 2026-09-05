@@ -11,7 +11,7 @@ import { encodeRGBA } from '../render/PNGEncoder.js';
 import { CameraOrbit } from './CameraOrbit.js';
 
 function usage() {
-  console.error('Usage: node src/tools/render-model.js <M2-or-folder> [output.png] [modelsRoot] [dbRoot] [yawDegrees] [cameraAxis]');
+  console.error('Usage: node src/tools/render-model.js <M2> [output.png] [modelsRoot] [dbRoot] [yawDegrees] [cameraAxis]');
   process.exit(2);
 }
 function normalize(p) { return String(p ?? '').replaceAll('\\', '/').replace(/^\/+/, '').toLowerCase(); }
@@ -25,71 +25,11 @@ async function findDb(root) {
   for (const parts of [['DBFilesClient', 'CharSections.dbc'], ['dbfilesclient', 'CharSections.dbc'], ['dbc', 'CharSections.dbc'], ['CharSections.dbc']]) { const candidate = path.join(root, ...parts); try { await fs.access(candidate); return candidate; } catch {} }
   return null;
 }
-async function resolveM2Input(inputPath) {
-  const resolved = path.resolve(inputPath);
-  const stat = await fs.stat(resolved).catch(() => null);
-
-  if (!stat) {
-    throw new Error(`Input path does not exist: ${inputPath}`);
-  }
-
-  if (stat.isFile()) {
-    if (path.extname(resolved).toLowerCase() !== '.m2') {
-      throw new Error(`Input file is not an M2 file: ${inputPath}`);
-    }
-
-    return resolved;
-  }
-
-  if (!stat.isDirectory()) {
-    throw new Error(`Input path is neither a file nor a directory: ${inputPath}`);
-  }
-
-  const candidates = [];
-
-  async function walk(dir) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-
-      if (entry.isDirectory()) {
-        await walk(fullPath);
-      } else if (
-        entry.isFile() &&
-        path.extname(entry.name).toLowerCase() === '.m2'
-      ) {
-        candidates.push(fullPath);
-      }
-    }
-  }
-
-  await walk(resolved);
-
-  candidates.sort((a, b) => a.localeCompare(b));
-
-  if (candidates.length === 0) {
-    throw new Error(`No M2 file found inside folder: ${inputPath}`);
-  }
-
-  if (candidates.length > 1) {
-    const list = candidates
-      .map(candidate => `  - ${path.relative(resolved, candidate)}`)
-      .join('\\n');
-
-    throw new Error(
-      `Multiple M2 files found inside folder: ${inputPath}\\n${list}\\nPlease provide the exact M2 file path.`
-    );
-  }
-
-  return candidates[0];
-}
-
 const args = process.argv.slice(2);
 const orbitMode = args.includes('--camera-orbit');
 const filteredArgs = args.filter(arg => arg !== '--camera-orbit');
-const [m2Input, outputPath = 'model.png', modelsRoot = path.dirname(process.argv[1]), dbRoot = modelsRoot, yawArg = '0', cameraAxis = 'x', elevationArg = '0'] = filteredArgs;
-if (!m2Input) usage();
+const [m2Path, outputPath = 'model.png', modelsRoot = path.dirname(process.argv[1]), dbRoot = modelsRoot, yawArg = '0', cameraAxis = 'x', elevationArg = '0'] = filteredArgs;
+if (!m2Path) usage();
 const yawDegrees = Number(yawArg);
 if (!Number.isFinite(yawDegrees)) throw new Error(`Invalid yaw angle: ${yawArg}`);
 const elevationDegrees = Number(elevationArg);
@@ -97,8 +37,7 @@ if (!Number.isFinite(elevationDegrees) || elevationDegrees < -90 || elevationDeg
 if (!['x', 'y', 'z'].includes(String(cameraAxis).toLowerCase())) throw new Error(`Invalid camera axis: ${cameraAxis}. Use x, y, or z.`);
 const root = path.resolve(modelsRoot), files = await collectFiles(root), decoder = new BLPDecoder();
 const cameraOrbit = orbitMode ? await CameraOrbit.load(path.resolve('./config/camera-orbit.json')) : null;
-const m2Path = await resolveM2Input(m2Input);
-const m2 = await new M2LegacyLoader().load(m2Path);
+const m2 = await new M2LegacyLoader().load(path.resolve(m2Path));
 if (!m2.skin) throw new Error(`No SKIN profile found for ${m2Path}`);
 const model = new ModelAssembler().assemble(m2, m2.skin);
 const resolvedMaterials = new MaterialResolver().resolve(m2, m2.skin);
@@ -155,9 +94,9 @@ async function decodeTexture(name) {
 }
 const materialImages = [];
 
-const creatureOverrideByTextureType = new Map(
+const creatureOverrideByTextureIndex = new Map(
   creatureOverrides.map(override => [
-    override.textureType,
+    override.textureIndex,
     override,
   ])
 );
@@ -166,7 +105,7 @@ for (const textureName of characterTexture.textureNames ?? []) await decodeTextu
 for (const material of resolvedMaterials.materials) {
   const texture = material.texture; let image = null;
   const creatureOverride =
-    creatureOverrideByTextureType.get(texture?.type) ?? null;
+    creatureOverrideByTextureIndex.get(material.textureIndex) ?? null;
   if (texture?.name) { textureStats.referenced++; image = await decodeTexture(texture.name); if (image) { textureStats.found++; textureStats.decoded++; } else textureStats.missing.push(texture.name); }
 
   if (creatureTexture.enabled && creatureOverride?.filePath) {
