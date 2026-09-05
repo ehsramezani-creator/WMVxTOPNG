@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # WMVxTOPNG - Git Ignore
 # ============================================================
 
@@ -67,3 +67,48 @@ desktop.ini
 # Logs
 # ------------------------------------------------------------
 *.log
+
+# ------------------------------------------------------------
+# WMVxTOPNG - Local test / debug artifacts
+# ------------------------------------------------------------
+TempTest/
+output/
+_snapshots/
+ExcelRanker/
+
+# Temporary test / debug scripts and reports
+trace-*.js
+Temp*.js
+Temp*.cjs
+Temp*.txt
+*-resolution.json
+
+# Backup / snapshot source variants
+
+# Test-only source variants
+
+
+# Historical reference copies kept locally
+*-d61ed37.js
+*-e3fb283.js
+OrbitReference-*.js
+
+# Date-stamped local source snapshots
+src/tools/*.before-*.js
+
+# Local test scripts
+src/tools/test-*.mjs
+
+
+# Temporary source copies / test files
+src/loaders/CreatureTextureResolver.current.js
+src/loaders/CreatureTextureResolver.test.js
+src/render/Camera.backup.js
+src/tools/TempRenderModel-bak5.js
+src/tools/inspect-creature-skins.test.js
+src/tools/render-model.js.bak2
+src/tools/render-model.js.bak3
+src/tools/render-model.js.bak4
+src/tools/render-model.js.bak5
+src/tools/render-model.js.bak6
+src/tools/render-model.js.bak7
