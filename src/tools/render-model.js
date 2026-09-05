@@ -82,21 +82,30 @@ const imageCache = new Map();
 let maxTextureWidth = 0, maxTextureHeight = 0, maxTextureName = null;
 async function decodeTexture(name) {
   if (!name) return null;
-  const key = normalize(name), pathKey = key.endsWith('.blp') ? key : `${key}.blp`;
+
+  const key = normalize(name);
+  const pathKey = key.endsWith('.blp') ? key : `${key}.blp`;
+
   if (imageCache.has(key)) return imageCache.get(key);
-  const texturePath = files.get(key) ?? files.get(pathKey);
+
+  const texturePath = path.isAbsolute(String(name))
+    ? String(name)
+    : (files.get(key) ?? files.get(pathKey));
+
   if (!texturePath) return null;
   const image = decoder.decode(await fs.readFile(texturePath));
   imageCache.set(key, image);
   const currentArea = maxTextureWidth * maxTextureHeight, imageArea = image.width * image.height;
-  if (imageArea > currentArea || (imageArea === currentArea && Math.max(image.width, image.height) > Math.max(maxTextureWidth, maxTextureHeight))) { maxTextureWidth = image.width; maxTextureHeight = image.height; maxTextureName = name; }
+  if (imageArea > currentArea || (imageArea === currentArea && Math.max(image.width, image.height) > Math.max(maxTextureWidth, maxTextureHeight))) {
+    maxTextureWidth = image.width; maxTextureHeight = image.height; maxTextureName = name;
+  }
   return image;
 }
 const materialImages = [];
 
-const creatureOverrideByTextureIndex = new Map(
+const creatureOverrideByTextureType = new Map(
   creatureOverrides.map(override => [
-    override.textureIndex,
+    override.textureType,
     override,
   ])
 );
@@ -105,7 +114,7 @@ for (const textureName of characterTexture.textureNames ?? []) await decodeTextu
 for (const material of resolvedMaterials.materials) {
   const texture = material.texture; let image = null;
   const creatureOverride =
-    creatureOverrideByTextureIndex.get(material.textureIndex) ?? null;
+    creatureOverrideByTextureType.get(texture?.type) ?? null;
   if (texture?.name) { textureStats.referenced++; image = await decodeTexture(texture.name); if (image) { textureStats.found++; textureStats.decoded++; } else textureStats.missing.push(texture.name); }
 
   if (creatureTexture.enabled && creatureOverride?.filePath) {

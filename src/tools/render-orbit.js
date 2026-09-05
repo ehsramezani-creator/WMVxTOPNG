@@ -4,6 +4,7 @@ import { M2LegacyLoader } from '../loaders/M2LegacyLoader.js';
 import { ModelAssembler } from '../loaders/ModelAssembler.js';
 import { MaterialResolver } from '../loaders/MaterialResolver.js';
 import { CharacterTextureResolver } from '../loaders/CharacterTextureResolver.js';
+import { CreatureTextureResolver } from '../loaders/CreatureTextureResolver.js';
 import { BLPDecoder } from '../loaders/BLPDecoder.js';
 import { SoftwareRenderer } from '../render/SoftwareRenderer.js';
 import { encodeRGBA } from '../render/PNGEncoder.js';
@@ -61,6 +62,11 @@ if (!m2.skin) throw new Error(`No SKIN profile found for ${m2Path}`);
 const model = new ModelAssembler().assemble(m2, m2.skin);
 const resolvedMaterials = new MaterialResolver().resolve(m2, m2.skin);
 const dbPath = await findDb(path.resolve(dbRoot));
+const creatureDisplayInfoPath = path.join(path.resolve(dbRoot), 'CreatureDisplayInfo.dbc');
+const creatureModelDataPath = path.join(path.resolve(dbRoot), 'CreatureModelData.dbc');
+const creatureTextureResolver = new CreatureTextureResolver({ files });
+const creatureTexture = await creatureTextureResolver.resolve(m2, { displayInfoPath: creatureDisplayInfoPath, modelDataPath: creatureModelDataPath });
+const creatureOverrides = creatureTextureResolver.resolveTextureOverrides(m2, creatureTexture);
 const characterTexture = await new CharacterTextureResolver({ decoder, files }).resolve(m2, { dbPath });
 const imageCache = new Map();
 let maxTextureWidth = 0, maxTextureHeight = 0;
@@ -69,7 +75,7 @@ async function decodeTexture(name) {
   if (!name) return null;
   const key = normalize(name), pathKey = key.endsWith('.blp') ? key : `${key}.blp`;
   if (imageCache.has(key)) return imageCache.get(key);
-  const texturePath = files.get(key) ?? files.get(pathKey);
+  const texturePath = path.isAbsolute(String(name)) ? String(name) : (files.get(key) ?? files.get(pathKey));
   if (!texturePath) return null;
   const image = decoder.decode(await fs.readFile(texturePath));
   imageCache.set(key, image);
@@ -81,11 +87,13 @@ async function decodeTexture(name) {
 }
 
 const materialImages = [];
+const creatureOverrideByTextureType = new Map(creatureOverrides.map(override => [override.textureType, override]));
 for (const textureName of characterTexture.textureNames ?? []) await decodeTexture(textureName);
 for (const material of resolvedMaterials.materials) {
-  const texture = material.texture;
-  let image = null;
+  const texture = material.texture; let image = null;
+  const creatureOverride = creatureOverrideByTextureType.get(texture?.type) ?? null;
   if (texture?.name) image = await decodeTexture(texture.name);
+  if (creatureTexture.enabled && creatureOverride?.filePath) image = await decodeTexture(creatureOverride.filePath) ?? image;
   if (characterTexture.enabled && texture?.type === 1 && characterTexture.composite) image = characterTexture.composite;
   else if (characterTexture.enabled && texture?.type === 6 && characterTexture.direct?.hair?.length) image = (await decodeTexture(characterTexture.direct.hair[0])) ?? image;
   else if (characterTexture.enabled && texture?.type === 7 && characterTexture.direct?.facialHair?.length) image = (await decodeTexture(characterTexture.direct.facialHair[0])) ?? image;
